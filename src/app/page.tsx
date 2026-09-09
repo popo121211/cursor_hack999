@@ -15,7 +15,7 @@ export default function HomePage() {
       <SiteHeader />
 
       <main className="relative flex flex-1 flex-col">
-        <section className="hero-stage page-shell pb-12 pt-6">
+        <section className="hero-stage page-shell pb-6 pt-6">
           <div className="hero-plane" aria-hidden />
 
           <div className="relative z-[1]">
@@ -43,7 +43,7 @@ export default function HomePage() {
           <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-mute">
             글과 목소리로 지금의 나를 남겨 두면, 타임캡슐을 열 때 다시 듣게 됩니다.
           </p>
-          <div className="mt-6">
+          <div className="mt-4">
             <div className="path-tabs">
               <button
                 type="button"
@@ -64,7 +64,7 @@ export default function HomePage() {
             </div>
             <p
               key={teaser}
-              className="animate-fade-up mt-6 font-display text-[1.25rem] leading-relaxed text-ink"
+              className="animate-fade-up mt-4 font-display text-[1.25rem] leading-relaxed text-ink"
             >
               {teaser === "kept"
                 ? "오늘의 네가 빠지면, 이 장면도 없다."

@@ -269,7 +269,7 @@ body > * {
 
 .hero-stage {
   position: relative;
-  min-height: min(72vh, 640px);
+  min-height: min(62vh, 560px);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
