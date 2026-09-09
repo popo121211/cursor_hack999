@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
-import { useCapsules } from "@/lib/hooks";
+import { useCapsules, useHasMounted } from "@/lib/hooks";
 
 export default function CapsuleListPage() {
+  const mounted = useHasMounted();
   const capsules = useCapsules();
 
   return (
@@ -15,7 +16,9 @@ export default function CapsuleListPage() {
         <h1 className="font-display mt-3 text-3xl">내 타임캡슐</h1>
         <p className="mt-3 text-[15px] text-mute">이 기기에 저장된 최근 메시지입니다.</p>
 
-        {capsules.length === 0 ? (
+        {!mounted ? (
+          <p className="mt-12 text-sm text-mute">불러오는 중…</p>
+        ) : capsules.length === 0 ? (
           <div className="mt-12">
             <p className="text-[15px] text-ink">아직 저장된 타임캡슐이 없어요.</p>
             <Link

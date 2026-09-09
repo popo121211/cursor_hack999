@@ -22,7 +22,9 @@ export function PushToast({ visible, body, onOpen, onDismiss }: PushToastProps) 
       <button
         type="button"
         onClick={onOpen}
-        className="w-full rounded-2xl border border-black/5 bg-white/95 p-3.5 text-left shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur"
+        className={`w-full rounded-2xl border border-black/5 bg-white p-3.5 text-left shadow-[0_12px_40px_rgba(0,0,0,0.14)] ${
+          visible ? "animate-fade-up" : ""
+        }`}
       >
         <div className="mb-1 flex items-center justify-between gap-3">
           <span className="text-[11px] font-medium tracking-[0.16em] text-ink">

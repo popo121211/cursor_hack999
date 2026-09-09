@@ -8,22 +8,27 @@ import { PrimaryButton, SecondaryButton } from "@/components/Buttons";
 import { PushToast } from "@/components/PushToast";
 import { VoicePlayer } from "@/components/VoicePlayer";
 import { ensureDualResult } from "@/lib/fallback";
-import { useCapsule } from "@/lib/hooks";
+import { useCapsule, useHasMounted } from "@/lib/hooks";
 import { updateCapsule } from "@/lib/storage";
-import { FuturePath, pickFutureMessage } from "@/lib/types";
+import { FuturePath, TONE_OPTIONS, pickFutureMessage } from "@/lib/types";
 
 export default function ResultPage() {
   const params = useParams<{ id: string }>();
+  const mounted = useHasMounted();
   const capsule = useCapsule(params.id);
   const [path, setPath] = useState<FuturePath>("kept");
   const [toastVisible, setToastVisible] = useState(false);
-  const [scheduling, setScheduling] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [promiseFlash, setPromiseFlash] = useState(false);
   const letterRef = useRef<HTMLElement>(null);
+  const notifyRef = useRef<HTMLElement>(null);
   const timerRef = useRef<number | null>(null);
+  const tickRef = useRef<number | null>(null);
 
   useEffect(() => {
     return () => {
       if (timerRef.current) window.clearTimeout(timerRef.current);
+      if (tickRef.current) window.clearInterval(tickRef.current);
     };
   }, []);
 
@@ -33,19 +38,47 @@ export default function ResultPage() {
   }, [capsule]);
 
   const active = dual ? pickFutureMessage(dual, path) : null;
+  const toneLabel =
+    TONE_OPTIONS.find((t) => t.value === capsule?.input.tone)?.label ??
+    capsule?.input.tone;
+
+  function clearNotifyTimers() {
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    if (tickRef.current) window.clearInterval(tickRef.current);
+    timerRef.current = null;
+    tickRef.current = null;
+  }
 
   function acceptPromise() {
     if (!capsule || capsule.promiseAccepted) return;
     updateCapsule(capsule.id, { promiseAccepted: true });
+    setPromiseFlash(true);
+    window.setTimeout(() => {
+      notifyRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 250);
   }
 
   function startNotificationDemo() {
-    if (scheduling || !active) return;
-    setScheduling(true);
+    if (countdown !== null || !active) return;
     setToastVisible(false);
+    clearNotifyTimers();
+    setCountdown(5);
+
+    let left = 5;
+    tickRef.current = window.setInterval(() => {
+      left -= 1;
+      if (left <= 0) {
+        if (tickRef.current) window.clearInterval(tickRef.current);
+        tickRef.current = null;
+        return;
+      }
+      setCountdown(left);
+    }, 1000);
+
     timerRef.current = window.setTimeout(() => {
+      setCountdown(null);
       setToastVisible(true);
-      setScheduling(false);
+      clearNotifyTimers();
     }, 5000);
   }
 
@@ -57,6 +90,19 @@ export default function ResultPage() {
   function switchPath(next: FuturePath) {
     setPath(next);
     setToastVisible(false);
+    setCountdown(null);
+    clearNotifyTimers();
+  }
+
+  if (!mounted) {
+    return (
+      <div className="flex min-h-full flex-col">
+        <SiteHeader />
+        <main className="mx-auto w-full max-w-lg flex-1 px-5 py-16">
+          <p className="text-sm text-mute">불러오는 중…</p>
+        </main>
+      </div>
+    );
   }
 
   if (!capsule || !dual || !active) {
@@ -79,6 +125,7 @@ export default function ResultPage() {
 
   const { input } = capsule;
   const isMissed = path === "missed";
+  const scheduling = countdown !== null;
 
   return (
     <div className="flex min-h-full flex-col">
@@ -178,16 +225,28 @@ export default function ResultPage() {
                   : "오늘 할게"}
             </PrimaryButton>
             {capsule.promiseAccepted ? (
-              <p className="mt-3 text-center text-sm text-mute">미래의 내가 기억할게요.</p>
+              <p className="mt-3 text-center text-sm text-mute">
+                이 타임캡슐에 대한 오늘의 약속을 기억할게요.
+                {promiseFlash ? " 아래에서 알림 도착도 체험해보세요." : ""}
+              </p>
             ) : null}
           </div>
         </section>
 
-        <section className="mt-10 border-t border-line pt-6">
+        <section
+          ref={notifyRef}
+          className={`mt-10 border-t border-line pt-6 transition ${
+            promiseFlash ? "rounded-2xl bg-white px-4 py-5 ring-1 ring-ink/10" : ""
+          }`}
+        >
           <h3 className="text-lg font-medium">미래 메시지 도착 체험하기</h3>
           <p className="mt-2 text-sm leading-relaxed text-mute">
-            약 5초 뒤, 지금 보고 있는 {isMissed ? "놓친" : "지킨"} 미래의 나 알림이 도착합니다.
+            약 5초 뒤, 지금 보고 있는 {isMissed ? "놓친" : "지킨"} 미래의 나 알림이
+            화면 위에 도착합니다.
           </p>
+          {scheduling ? (
+            <p className="mt-4 text-center font-display text-4xl text-ink">{countdown}</p>
+          ) : null}
           <div className="mt-5">
             <SecondaryButton onClick={startNotificationDemo} disabled={scheduling}>
               {scheduling ? "도착 대기 중…" : "미래 메시지 도착 체험하기"}
@@ -211,7 +270,7 @@ export default function ResultPage() {
         </div>
 
         <p className="mt-8 text-center text-xs text-mute">
-          {input.goal} · {input.targetDate} · {input.tone}
+          {input.goal} · {input.targetDate} · {toneLabel}
         </p>
       </main>
     </div>

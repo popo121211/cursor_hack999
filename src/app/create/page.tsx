@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PrimaryButton } from "@/components/Buttons";
 import { GeneratingOverlay } from "@/components/GeneratingOverlay";
-import { DEMO_INPUT } from "@/lib/demo";
+import { getDemoInput } from "@/lib/demo";
 import { ensureDualResult } from "@/lib/fallback";
 import { saveCapsule } from "@/lib/storage";
 import { Capsule, CapsuleAIResult, CapsuleInput, TONE_OPTIONS, Tone } from "@/lib/types";
@@ -26,10 +26,11 @@ export default function CreatePage() {
   const [loading, setLoading] = useState(false);
 
   function fillDemo() {
-    setGoal(DEMO_INPUT.goal);
-    setReason(DEMO_INPUT.reason);
-    setTargetDate(DEMO_INPUT.targetDate);
-    setTone(DEMO_INPUT.tone);
+    const demo = getDemoInput();
+    setGoal(demo.goal);
+    setReason(demo.reason);
+    setTargetDate(demo.targetDate);
+    setTone(demo.tone);
     setError(null);
   }
 
@@ -49,7 +50,7 @@ export default function CreatePage() {
       return;
     }
     if (!targetDate || targetDate < minDate) {
-      setError("목표 날짜는 오늘 이후로 선택해주세요.");
+      setError("목표 날짜는 오늘 포함 이후로 선택해주세요.");
       return;
     }
 
@@ -81,7 +82,6 @@ export default function CreatePage() {
         throw new Error(data.error || "생성에 실패했습니다.");
       }
 
-      // 로딩 연출 최소 시간
       const elapsed = Date.now() - started;
       if (elapsed < 2800) {
         await new Promise((r) => setTimeout(r, 2800 - elapsed));
@@ -95,6 +95,7 @@ export default function CreatePage() {
         updatedAt: new Date().toISOString(),
       };
       saveCapsule(capsule);
+      setLoading(false);
       router.push(`/result/${capsule.id}`);
     } catch (err) {
       setLoading(false);
@@ -102,12 +103,13 @@ export default function CreatePage() {
     }
   }
 
+  const goalLen = goal.trim().length;
+  const reasonLen = reason.trim().length;
+
   return (
     <div className="flex min-h-full flex-col">
       <SiteHeader />
-      {loading ? (
-          <GeneratingOverlay key="generating" active />
-        ) : null}
+      {loading ? <GeneratingOverlay key="generating" active /> : null}
 
       <main className="mx-auto w-full max-w-lg flex-1 px-5 pb-16 pt-2">
         <p className="text-[13px] tracking-[0.18em] text-mute">STEP</p>
@@ -132,7 +134,11 @@ export default function CreatePage() {
         </p>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-8">
-          <Field label="이루고 싶은 목표" hint="예: 토익 900점 받기">
+          <Field
+            label="이루고 싶은 목표"
+            hint="예: 내 이름으로 만든 첫 서비스를 끝까지 세상에 내놓기"
+            counter={`${goalLen}/80 · 최소 5자`}
+          >
             <input
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
@@ -143,7 +149,11 @@ export default function CreatePage() {
             />
           </Field>
 
-          <Field label="왜 이루고 싶은가요?" hint="초심이 되는 이유를 구체적으로">
+          <Field
+            label="왜 이루고 싶은가요?"
+            hint="초심이 되는 이유를 구체적으로"
+            counter={`${reasonLen}/200 · 최소 10자`}
+          >
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
@@ -154,7 +164,7 @@ export default function CreatePage() {
             />
           </Field>
 
-          <Field label="목표 날짜">
+          <Field label="목표 날짜" hint="오늘 포함, 이후 날짜">
             <input
               type="date"
               value={targetDate}
@@ -209,15 +219,20 @@ export default function CreatePage() {
 function Field({
   label,
   hint,
+  counter,
   children,
 }: {
   label: string;
   hint?: string;
+  counter?: string;
   children: React.ReactNode;
 }) {
   return (
     <label className="block">
-      <span className="text-sm font-medium text-ink">{label}</span>
+      <span className="flex items-baseline justify-between gap-3">
+        <span className="text-sm font-medium text-ink">{label}</span>
+        {counter ? <span className="text-xs text-mute">{counter}</span> : null}
+      </span>
       {hint ? <span className="mt-1 block text-sm text-mute">{hint}</span> : null}
       {children}
     </label>

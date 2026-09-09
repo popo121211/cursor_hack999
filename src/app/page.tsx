@@ -1,7 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 
 export default function HomePage() {
+  const [teaser, setTeaser] = useState<"kept" | "missed">("kept");
+
   return (
     <div className="flex min-h-full flex-col">
       <SiteHeader />
@@ -23,8 +28,36 @@ export default function HomePage() {
         </p>
 
         <p className="animate-fade-up mt-4 max-w-sm text-[15px] leading-relaxed text-mute">
-          지킨 나, 그리고 미룬 나. 둘 다 듣고 오늘을 다시 고르세요.
+          오늘의 네가 없으면, 그 미래도 없습니다.
         </p>
+
+        <div className="animate-fade-up mt-8">
+          <div className="grid grid-cols-2 gap-2 rounded-full border border-line bg-white p-1">
+            <button
+              type="button"
+              onClick={() => setTeaser("kept")}
+              className={`h-9 rounded-full text-sm transition ${
+                teaser === "kept" ? "bg-ink text-white" : "text-mute"
+              }`}
+            >
+              지킨 나
+            </button>
+            <button
+              type="button"
+              onClick={() => setTeaser("missed")}
+              className={`h-9 rounded-full text-sm transition ${
+                teaser === "missed" ? "bg-ink text-white" : "text-mute"
+              }`}
+            >
+              미룬 나
+            </button>
+          </div>
+          <p key={teaser} className="animate-fade-up mt-4 text-[15px] leading-relaxed text-ink/90">
+            {teaser === "kept"
+              ? "“오늘의 네가 없었으면, 지금의 이 아침도 없어.”"
+              : "“놓친 미래야. 그래도 지금 다시 선택하면 열려.”"}
+          </p>
+        </div>
 
         <div className="animate-fade-up mt-10">
           <Link
@@ -34,10 +67,6 @@ export default function HomePage() {
             미래의 나 만나기
           </Link>
         </div>
-
-        <p className="animate-fade-up mt-8 text-[13px] leading-relaxed text-mute">
-          지킨 나 · 미룬 나 · 음성 · 알림 체험
-        </p>
       </main>
     </div>
   );
