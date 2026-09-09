@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
-import { Noto_Sans_KR, Noto_Serif_KR } from "next/font/google";
+import { IBM_Plex_Sans_KR, Song_Myung } from "next/font/google";
 import "./globals.css";
 
-const display = Noto_Serif_KR({
-  weight: ["500", "600"],
-  subsets: ["latin"],
+const display = Song_Myung({
+  weight: "400",
   variable: "--font-display",
 });
 
-const body = Noto_Sans_KR({
+const body = IBM_Plex_Sans_KR({
   weight: ["400", "500", "600"],
   subsets: ["latin"],
   variable: "--font-body",

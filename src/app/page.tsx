@@ -8,26 +8,30 @@ export default function HomePage() {
   const [teaser, setTeaser] = useState<"kept" | "missed">("kept");
 
   return (
-    <div className="flex min-h-full flex-col">
-      <SiteHeader />
-      <main className="relative mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-5 pb-16 pt-4">
-        <p className="animate-fade-up text-sm text-mute">타임캡슐</p>
+    <div className="relative flex min-h-full flex-col overflow-hidden">
+      <div className="hero-orb animate-breathe left-[-20%] top-[12%] h-56 w-56" />
+      <div className="hero-orb right-[-18%] top-[38%] h-72 w-72 opacity-70" />
 
-        <h1 className="animate-fade-up font-display mt-4 text-[2.7rem] leading-[1.15] text-ink sm:text-5xl">
+      <SiteHeader />
+
+      <main className="page-shell relative flex flex-1 flex-col justify-center pb-20 pt-6">
+        <p className="animate-fade-up section-label">Time capsule</p>
+
+        <h1 className="animate-fade-up font-display mt-5 text-[3.4rem] leading-[1.05] text-ink sm:text-[4.2rem]">
           FROM.ME
         </h1>
 
-        <p className="animate-fade-up mt-6 max-w-[20rem] text-[1.2rem] leading-snug text-ink">
+        <p className="animate-fade-up mt-7 max-w-[18rem] text-[1.35rem] leading-snug text-ink-soft">
           오늘의 선택이
           <br />
           미래의 나를 가른다.
         </p>
 
         <p className="animate-fade-up mt-4 max-w-sm text-[15px] leading-relaxed text-mute">
-          말로 이유를 남기고, 오늘 행동 결과에 따라 미래가 다시 갈라집니다.
+          지금의 말을 남기고, 지킨 나와 미룬 나의 목소리를 받아보세요.
         </p>
 
-        <div className="animate-fade-up mt-9">
+        <div className="animate-soft-in mt-10 letter-sheet">
           <div className="path-tabs">
             <button
               type="button"
@@ -46,19 +50,20 @@ export default function HomePage() {
               미룬 나
             </button>
           </div>
-          <div className="mt-5 border-l-2 border-ink/20 pl-4">
-            <p key={teaser} className="animate-fade-up text-[15px] leading-relaxed text-ink">
-              {teaser === "kept"
-                ? "오늘의 네가 빠지면, 이 장면도 없다."
-                : "비워둔 날의 나야. 그래도 다시 이을 수는 있어."}
-            </p>
-          </div>
+          <p
+            key={teaser}
+            className="animate-fade-up mt-5 font-display text-[1.2rem] leading-relaxed text-ink"
+          >
+            {teaser === "kept"
+              ? "오늘의 네가 빠지면, 이 장면도 없다."
+              : "비워둔 날의 나야. 그래도 다시 이을 수는 있어."}
+          </p>
         </div>
 
-        <div className="animate-fade-up mt-10">
+        <div className="animate-fade-up mt-8">
           <Link
             href="/create"
-            className="inline-flex h-12 w-full items-center justify-center rounded-md bg-ink px-6 text-[15px] font-medium text-white transition hover:opacity-90"
+            className="inline-flex h-12 w-full items-center justify-center rounded-xl bg-ink px-6 text-[15px] font-medium text-white transition hover:bg-[#2a303a]"
           >
             시작하기
           </Link>

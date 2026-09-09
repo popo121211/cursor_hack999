@@ -124,14 +124,14 @@ export default function CreatePage() {
       <SiteHeader />
       {loading ? <GeneratingOverlay key="generating" active /> : null}
 
-      <main className="mx-auto w-full max-w-lg flex-1 px-5 pb-16 pt-2">
-        <p className="text-sm text-mute">작성</p>
-        <h1 className="font-display mt-3 text-3xl leading-tight text-ink">
+      <main className="page-shell flex-1 pb-20 pt-2">
+        <p className="section-label animate-fade-up">Write</p>
+        <h1 className="animate-fade-up font-display mt-3 text-[2.4rem] leading-tight text-ink">
           목표와 이유를
           <br />
           남겨주세요
         </h1>
-        <p className="mt-3 text-[15px] text-mute">
+        <p className="animate-fade-up mt-3 text-[15px] leading-relaxed text-mute">
           미래의 나에게 직접 전할 말도 함께 남기세요. 그다음 AI가 지킨 나 / 미룬 나
           편지를 만듭니다.
         </p>
@@ -147,7 +147,7 @@ export default function CreatePage() {
           심사/발표에서 바로 보여줄 목표·이유 프리셋입니다.
         </p>
 
-        <form onSubmit={onSubmit} className="mt-8 space-y-8">
+        <form onSubmit={onSubmit} className="animate-soft-in mt-8 space-y-7 letter-sheet">
           <Field
             label="이루고 싶은 목표"
             hint="예: 내 이름으로 만든 첫 서비스를 끝까지 세상에 내놓기"
@@ -225,8 +225,10 @@ export default function CreatePage() {
                 return (
                   <label
                     key={opt.value}
-                    className={`flex cursor-pointer items-start gap-3 border px-4 py-3 transition ${
-                      selected ? "border-ink bg-paper" : "border-line bg-transparent hover:bg-paper/70"
+                    className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition ${
+                      selected
+                        ? "border-ink/40 bg-white"
+                        : "border-line bg-white/40 hover:bg-white/70"
                     }`}
                   >
                     <input
