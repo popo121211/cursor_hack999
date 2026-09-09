@@ -15,9 +15,16 @@ interface VoicePlayerProps {
   message: string;
   action: string;
   tone: Tone;
+  listenLabel?: string;
 }
 
-export function VoicePlayer({ headline, message, action, tone }: VoicePlayerProps) {
+export function VoicePlayer({
+  headline,
+  message,
+  action,
+  tone,
+  listenLabel = "미래의 나 목소리로 듣기",
+}: VoicePlayerProps) {
   const [supported] = useState(() => isSpeechSupported());
   const [speaking, setSpeaking] = useState(false);
   const stopRef = useRef<(() => void) | null>(null);
@@ -60,7 +67,7 @@ export function VoicePlayer({ headline, message, action, tone }: VoicePlayerProp
   return (
     <div className="mt-6">
       <SecondaryButton type="button" onClick={toggle} aria-pressed={speaking}>
-        {speaking ? "음성 중지" : "미래의 나 목소리로 듣기"}
+        {speaking ? "음성 중지" : listenLabel}
       </SecondaryButton>
       <p className="mt-2 text-center text-xs text-mute">
         {speaking ? "미래의 나가 읽고 있어요…" : "브라우저 음성으로 편지를 읽어줍니다"}

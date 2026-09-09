@@ -16,14 +16,14 @@ export default function HomePage() {
           FROM.ME
         </h1>
 
-        <p className="animate-fade-up mt-6 max-w-[20rem] text-[1.15rem] leading-relaxed text-ink/90">
-          목표를 세운 순간,
+        <p className="animate-fade-up mt-6 max-w-[22rem] text-[1.15rem] leading-relaxed text-ink/90">
+          오늘의 선택이,
           <br />
-          미래의 내가 오늘을 남긴다.
+          미래의 나를 가른다.
         </p>
 
         <p className="animate-fade-up mt-4 max-w-sm text-[15px] leading-relaxed text-mute">
-          포기하기 전에, 그때의 이유를 다시 듣게 해줍니다.
+          지킨 나, 그리고 미룬 나. 둘 다 듣고 오늘을 다시 고르세요.
         </p>
 
         <div className="animate-fade-up mt-10">
@@ -36,7 +36,7 @@ export default function HomePage() {
         </div>
 
         <p className="animate-fade-up mt-8 text-[13px] leading-relaxed text-mute">
-          AI Future Self · 음성으로 듣기 · 알림 체험
+          지킨 나 · 미룬 나 · 음성 · 알림 체험
         </p>
       </main>
     </div>

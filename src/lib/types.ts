@@ -7,6 +7,9 @@ export type Emotion =
   | "hard_to_start"
   | null;
 
+/** 오늘을 지킨 미래 vs 오늘을 미룬 미래 */
+export type FuturePath = "kept" | "missed";
+
 export interface CapsuleInput {
   goal: string;
   reason: string;
@@ -16,11 +19,17 @@ export interface CapsuleInput {
   createdAt: string;
 }
 
-export interface CapsuleAIResult {
+/** 단일 Future Self 메시지 묶음 */
+export interface FutureMessage {
   headline: string;
   message: string;
   action: string;
   notificationMessage: string;
+}
+
+export interface CapsuleAIResult extends FutureMessage {
+  /** 오늘을 미룬 미래의 나 — 실패를 인정하되 다시 기회를 준다 */
+  missed: FutureMessage;
 }
 
 export interface Capsule {
@@ -40,3 +49,16 @@ export const TONE_OPTIONS: { value: Tone; label: string; hint: string }[] = [
 
 export const STORAGE_KEY = "fromme.capsules.v1";
 export const MAX_STORED_CAPSULES = 5;
+
+export function pickFutureMessage(
+  result: CapsuleAIResult,
+  path: FuturePath,
+): FutureMessage {
+  if (path === "missed") return result.missed;
+  return {
+    headline: result.headline,
+    message: result.message,
+    action: result.action,
+    notificationMessage: result.notificationMessage,
+  };
+}

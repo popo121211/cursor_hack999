@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { PrimaryButton } from "@/components/Buttons";
 import { GeneratingOverlay } from "@/components/GeneratingOverlay";
 import { DEMO_INPUT } from "@/lib/demo";
+import { ensureDualResult } from "@/lib/fallback";
 import { saveCapsule } from "@/lib/storage";
 import { Capsule, CapsuleAIResult, CapsuleInput, TONE_OPTIONS, Tone } from "@/lib/types";
 
@@ -89,7 +90,7 @@ export default function CreatePage() {
       const capsule: Capsule = {
         id: crypto.randomUUID(),
         input,
-        result: data.result,
+        result: ensureDualResult(data.result, input),
         promiseAccepted: false,
         updatedAt: new Date().toISOString(),
       };

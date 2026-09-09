@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { buildFallbackResult } from "@/lib/fallback";
 import { buildSystemPrompt, buildUserPrompt } from "@/lib/prompt";
-import { CapsuleAIResult, CapsuleInput, Tone } from "@/lib/types";
+import { CapsuleAIResult, CapsuleInput, FutureMessage, Tone } from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -30,11 +30,9 @@ function validateInput(body: unknown): CapsuleInput | null {
   };
 }
 
-function normalizeResult(raw: unknown, input: CapsuleInput): CapsuleAIResult {
-  const fallback = buildFallbackResult(input);
+function readMessage(raw: unknown, fallback: FutureMessage): FutureMessage {
   if (!raw || typeof raw !== "object") return fallback;
   const r = raw as Record<string, unknown>;
-
   const headline = typeof r.headline === "string" ? r.headline.trim() : "";
   const message = typeof r.message === "string" ? r.message.trim() : "";
   const action = typeof r.action === "string" ? r.action.trim() : "";
@@ -46,8 +44,21 @@ function normalizeResult(raw: unknown, input: CapsuleInput): CapsuleAIResult {
   if (notificationMessage.length > 40) {
     notificationMessage = `${notificationMessage.slice(0, 39)}…`;
   }
-
   return { headline, message, action, notificationMessage };
+}
+
+function normalizeResult(raw: unknown, input: CapsuleInput): CapsuleAIResult {
+  const fallback = buildFallbackResult(input);
+  if (!raw || typeof raw !== "object") return fallback;
+  const r = raw as Record<string, unknown>;
+
+  const kept = readMessage(r, fallback);
+  const missed = readMessage(r.missed, fallback.missed);
+
+  return {
+    ...kept,
+    missed,
+  };
 }
 
 export async function POST(req: Request) {

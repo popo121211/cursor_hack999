@@ -2,17 +2,20 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PrimaryButton, SecondaryButton } from "@/components/Buttons";
 import { PushToast } from "@/components/PushToast";
 import { VoicePlayer } from "@/components/VoicePlayer";
+import { ensureDualResult } from "@/lib/fallback";
 import { useCapsule } from "@/lib/hooks";
 import { updateCapsule } from "@/lib/storage";
+import { FuturePath, pickFutureMessage } from "@/lib/types";
 
 export default function ResultPage() {
   const params = useParams<{ id: string }>();
   const capsule = useCapsule(params.id);
+  const [path, setPath] = useState<FuturePath>("kept");
   const [toastVisible, setToastVisible] = useState(false);
   const [scheduling, setScheduling] = useState(false);
   const letterRef = useRef<HTMLElement>(null);
@@ -24,13 +27,20 @@ export default function ResultPage() {
     };
   }, []);
 
+  const dual = useMemo(() => {
+    if (!capsule) return null;
+    return ensureDualResult(capsule.result, capsule.input);
+  }, [capsule]);
+
+  const active = dual ? pickFutureMessage(dual, path) : null;
+
   function acceptPromise() {
     if (!capsule || capsule.promiseAccepted) return;
     updateCapsule(capsule.id, { promiseAccepted: true });
   }
 
   function startNotificationDemo() {
-    if (scheduling) return;
+    if (scheduling || !active) return;
     setScheduling(true);
     setToastVisible(false);
     timerRef.current = window.setTimeout(() => {
@@ -44,7 +54,12 @@ export default function ResultPage() {
     letterRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  if (!capsule) {
+  function switchPath(next: FuturePath) {
+    setPath(next);
+    setToastVisible(false);
+  }
+
+  if (!capsule || !dual || !active) {
     return (
       <div className="flex min-h-full flex-col">
         <SiteHeader />
@@ -62,14 +77,15 @@ export default function ResultPage() {
     );
   }
 
-  const { input, result } = capsule;
+  const { input } = capsule;
+  const isMissed = path === "missed";
 
   return (
     <div className="flex min-h-full flex-col">
       <SiteHeader />
       <PushToast
         visible={toastVisible}
-        body={result.notificationMessage}
+        body={active.notificationMessage}
         onOpen={openFromToast}
         onDismiss={() => setToastVisible(false)}
       />
@@ -81,23 +97,59 @@ export default function ResultPage() {
           <br />
           메시지가 도착했습니다.
         </h1>
+        <p className="animate-fade-up mt-3 text-[15px] leading-relaxed text-mute">
+          오늘의 선택이, 미래의 나를 가릅니다.
+        </p>
+
+        <div className="animate-fade-up mt-8 grid grid-cols-2 gap-2 rounded-full border border-line bg-white p-1">
+          <button
+            type="button"
+            onClick={() => switchPath("kept")}
+            className={`h-10 rounded-full text-sm font-medium transition ${
+              !isMissed ? "bg-ink text-white" : "text-mute hover:text-ink"
+            }`}
+          >
+            오늘을 지킨 나
+          </button>
+          <button
+            type="button"
+            onClick={() => switchPath("missed")}
+            className={`h-10 rounded-full text-sm font-medium transition ${
+              isMissed ? "bg-ink text-white" : "text-mute hover:text-ink"
+            }`}
+          >
+            오늘을 미룬 나
+          </button>
+        </div>
 
         <article
           ref={letterRef}
+          key={path}
           className="animate-fade-up mt-10 border-t border-line pt-8"
         >
-          <p className="text-[13px] tracking-[0.16em] text-mute">FROM. 미래의 나</p>
+          <p className="text-[13px] tracking-[0.16em] text-mute">
+            {isMissed ? "FROM. 놓친 미래의 나" : "FROM. 지킨 미래의 나"}
+          </p>
+          {isMissed ? (
+            <p className="mt-3 text-sm leading-relaxed text-mute">
+              실패 버전이지만, 끝은 아닙니다. 다시 기회가 남아 있습니다.
+            </p>
+          ) : null}
           <h2 className="font-display mt-4 text-[1.75rem] leading-snug text-ink">
-            {result.headline}
+            {active.headline}
           </h2>
           <p className="letter-body mt-6 text-[16px] leading-[1.85] text-ink/90">
-            {result.message}
+            {active.message}
           </p>
           <VoicePlayer
-            headline={result.headline}
-            message={result.message}
-            action={result.action}
+            key={`voice-${path}`}
+            headline={active.headline}
+            message={active.message}
+            action={active.action}
             tone={input.tone}
+            listenLabel={
+              isMissed ? "놓친 미래의 나 목소리로 듣기" : "지킨 미래의 나 목소리로 듣기"
+            }
           />
         </article>
 
@@ -107,13 +159,23 @@ export default function ResultPage() {
         </section>
 
         <section className="mt-10 border-t border-line pt-6">
-          <p className="text-[13px] tracking-[0.14em] text-mute">TODAY</p>
-          <h3 className="mt-2 text-lg font-medium">미래의 내가 부탁한 오늘의 행동</h3>
-          <p className="mt-3 text-[16px] leading-relaxed text-ink">{result.action}</p>
+          <p className="text-[13px] tracking-[0.14em] text-mute">
+            {isMissed ? "SECOND CHANCE" : "TODAY"}
+          </p>
+          <h3 className="mt-2 text-lg font-medium">
+            {isMissed
+              ? "놓친 미래의 나가 다시 주는 기회"
+              : "미래의 내가 부탁한 오늘의 행동"}
+          </h3>
+          <p className="mt-3 text-[16px] leading-relaxed text-ink">{active.action}</p>
 
           <div className="mt-5">
             <PrimaryButton onClick={acceptPromise} disabled={capsule.promiseAccepted}>
-              {capsule.promiseAccepted ? "약속했어요 ✓" : "오늘 할게"}
+              {capsule.promiseAccepted
+                ? "약속했어요 ✓"
+                : isMissed
+                  ? "다시 기회 잡을게"
+                  : "오늘 할게"}
             </PrimaryButton>
             {capsule.promiseAccepted ? (
               <p className="mt-3 text-center text-sm text-mute">미래의 내가 기억할게요.</p>
@@ -124,7 +186,7 @@ export default function ResultPage() {
         <section className="mt-10 border-t border-line pt-6">
           <h3 className="text-lg font-medium">미래 메시지 도착 체험하기</h3>
           <p className="mt-2 text-sm leading-relaxed text-mute">
-            약 5초 뒤, 모바일 알림처럼 미래의 나 메시지가 도착합니다.
+            약 5초 뒤, 지금 보고 있는 {isMissed ? "놓친" : "지킨"} 미래의 나 알림이 도착합니다.
           </p>
           <div className="mt-5">
             <SecondaryButton onClick={startNotificationDemo} disabled={scheduling}>
