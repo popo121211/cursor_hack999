@@ -8,7 +8,7 @@ export default function HomePage() {
   const [teaser, setTeaser] = useState<"kept" | "missed">("kept");
 
   return (
-    <div className="relative flex min-h-full flex-col overflow-hidden">
+    <div className="relative flex min-h-full flex-col overflow-x-hidden">
       <div className="hero-orb animate-breathe left-[-22%] top-[8%] h-64 w-64" />
       <div className="hero-orb animate-drift right-[-20%] top-[42%] h-80 w-80 opacity-70" />
 
