@@ -8,10 +8,31 @@ import {
 } from "@/lib/voiceStore";
 
 const MAX_SECONDS = 45;
+const MAX_FILE_BYTES = 3 * 1024 * 1024;
 
 interface VoiceMemoRecorderProps {
   value: Blob | null;
   onChange: (blob: Blob | null) => void;
+}
+
+function micErrorMessage(err: unknown): string {
+  const name =
+    err && typeof err === "object" && "name" in err
+      ? String((err as { name: string }).name)
+      : "";
+  if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+    return "마이크 권한을 허용해주세요. 주소창 왼쪽 자물쇠 → 마이크 허용.";
+  }
+  if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+    return "마이크를 찾지 못했어요. 아래에서 오디오 파일을 첨부할 수 있어요.";
+  }
+  if (name === "NotReadableError" || name === "TrackStartError") {
+    return "마이크를 다른 앱이 쓰고 있을 수 있어요. 닫고 다시 시도해주세요.";
+  }
+  if (typeof window !== "undefined" && !window.isSecureContext) {
+    return "보안 연결(https 또는 localhost)에서만 녹음할 수 있어요.";
+  }
+  return "녹음을 시작하지 못했어요. 오디오 파일 첨부로 대신할 수 있어요.";
 }
 
 export function VoiceMemoRecorder({ value, onChange }: VoiceMemoRecorderProps) {
@@ -21,6 +42,7 @@ export function VoiceMemoRecorder({ value, onChange }: VoiceMemoRecorderProps) {
   const [error, setError] = useState<string | null>(null);
   const previewUrl = useRef<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const mediaRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -87,6 +109,10 @@ export function VoiceMemoRecorder({ value, onChange }: VoiceMemoRecorderProps) {
 
   async function start() {
     setError(null);
+    if (!supported) {
+      setError("이 브라우저는 마이크 녹음을 지원하지 않아요. 파일을 첨부해주세요.");
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRef.current = stream;
@@ -100,6 +126,10 @@ export function VoiceMemoRecorder({ value, onChange }: VoiceMemoRecorderProps) {
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) chunksRef.current.push(event.data);
       };
+      recorder.onerror = () => {
+        setError("녹음 중 오류가 났어요. 다시 시도하거나 파일을 첨부해주세요.");
+        finishRecording();
+      };
       recorder.onstop = () => {
         const type = recorder.mimeType || mimeType || "audio/webm";
         const blob = new Blob(chunksRef.current, { type });
@@ -109,6 +139,8 @@ export function VoiceMemoRecorder({ value, onChange }: VoiceMemoRecorderProps) {
         if (blob.size > 0) {
           setPreviewFromBlob(blob);
           onChange(blob);
+        } else {
+          setError("녹음된 소리가 비어 있어요. 다시 녹음하거나 파일을 첨부해주세요.");
         }
       };
 
@@ -122,8 +154,8 @@ export function VoiceMemoRecorder({ value, onChange }: VoiceMemoRecorderProps) {
           return next;
         });
       }, 1000);
-    } catch {
-      setError("마이크 권한을 허용해주세요.");
+    } catch (err) {
+      setError(micErrorMessage(err));
       stopTracks();
       setRecording(false);
     }
@@ -145,14 +177,23 @@ export function VoiceMemoRecorder({ value, onChange }: VoiceMemoRecorderProps) {
     setError(null);
     setPreviewFromBlob(null);
     onChange(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
-  if (!supported) {
-    return (
-      <p className="mt-2 text-xs text-mute">
-        이 환경에서는 음성 녹음을 지원하지 않아요. Chrome을 권장합니다.
-      </p>
-    );
+  function onPickFile(file: File | null) {
+    setError(null);
+    if (!file) return;
+    if (!file.type.startsWith("audio/") && !/\.(webm|mp3|m4a|wav|ogg|aac)$/i.test(file.name)) {
+      setError("오디오 파일만 첨부할 수 있어요. (webm, mp3, wav 등)");
+      return;
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      setError("파일이 너무 커요. 3MB 이하로 첨부해주세요.");
+      return;
+    }
+    const blob = file.slice(0, file.size, file.type || "audio/webm");
+    setPreviewFromBlob(blob);
+    onChange(blob);
   }
 
   return (
@@ -177,7 +218,7 @@ export function VoiceMemoRecorder({ value, onChange }: VoiceMemoRecorderProps) {
             녹음 중지
           </PrimaryButton>
         ) : (
-          <PrimaryButton type="button" onClick={start}>
+          <PrimaryButton type="button" onClick={start} disabled={!supported}>
             {value ? "다시 녹음" : "녹음 시작"}
           </PrimaryButton>
         )}
@@ -185,6 +226,32 @@ export function VoiceMemoRecorder({ value, onChange }: VoiceMemoRecorderProps) {
           삭제
         </SecondaryButton>
       </div>
+
+      <div className="mt-3">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="audio/*,.webm,.mp3,.m4a,.wav,.ogg,.aac"
+          className="hidden"
+          onChange={(e) => onPickFile(e.target.files?.[0] ?? null)}
+        />
+        <SecondaryButton
+          type="button"
+          disabled={recording}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          오디오 파일 첨부
+        </SecondaryButton>
+        <p className="mt-2 text-xs text-mute">
+          마이크가 없거나 권한이 안 되면 녹음 파일로 대신 남길 수 있어요.
+        </p>
+      </div>
+
+      {!supported ? (
+        <p className="mt-2 text-xs text-mute">
+          이 브라우저는 마이크 녹음을 지원하지 않아요. Chrome + 파일 첨부를 권장합니다.
+        </p>
+      ) : null}
 
       {preview ? (
         <audio className="mt-3 w-full" controls src={preview} preload="metadata" />
