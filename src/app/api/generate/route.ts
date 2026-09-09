@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { buildFallbackResult } from "@/lib/fallback";
 import { buildSystemPrompt, buildUserPrompt } from "@/lib/prompt";
-import { CapsuleAIResult, CapsuleInput, FutureMessage, Tone } from "@/lib/types";
+import {
+  CapsuleAIResult,
+  CapsuleInput,
+  FutureMessage,
+  FutureReading,
+  Tone,
+} from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -47,6 +53,22 @@ function readMessage(raw: unknown, fallback: FutureMessage): FutureMessage {
   return { headline, message, action, notificationMessage };
 }
 
+function readReading(raw: unknown, fallback: FutureReading): FutureReading {
+  if (!raw || typeof raw !== "object") return fallback;
+  const r = raw as Record<string, unknown>;
+  const coreDesire = typeof r.coreDesire === "string" ? r.coreDesire.trim() : "";
+  const likelyFriction =
+    typeof r.likelyFriction === "string" ? r.likelyFriction.trim() : "";
+  const stakeIfSkipped =
+    typeof r.stakeIfSkipped === "string" ? r.stakeIfSkipped.trim() : "";
+  const personaLabel =
+    typeof r.personaLabel === "string" ? r.personaLabel.trim() : "";
+  if (!coreDesire || !likelyFriction || !stakeIfSkipped || !personaLabel) {
+    return fallback;
+  }
+  return { coreDesire, likelyFriction, stakeIfSkipped, personaLabel };
+}
+
 function normalizeResult(raw: unknown, input: CapsuleInput): CapsuleAIResult {
   const fallback = buildFallbackResult(input);
   if (!raw || typeof raw !== "object") return fallback;
@@ -54,9 +76,11 @@ function normalizeResult(raw: unknown, input: CapsuleInput): CapsuleAIResult {
 
   const kept = readMessage(r, fallback);
   const missed = readMessage(r.missed, fallback.missed);
+  const reading = readReading(r.reading, fallback.reading);
 
   return {
     ...kept,
+    reading,
     missed,
   };
 }
@@ -83,7 +107,7 @@ export async function POST(req: Request) {
     const client = new OpenAI({ apiKey });
     const completion = await client.chat.completions.create({
       model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-      temperature: 0.8,
+      temperature: 0.75,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: buildSystemPrompt() },

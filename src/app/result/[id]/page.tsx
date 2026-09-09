@@ -114,7 +114,7 @@ export default function ResultPage() {
           <p className="mt-3 text-mute">이 기기에서 만든 메시지만 다시 볼 수 있어요.</p>
           <Link
             href="/create"
-            className="mt-8 inline-flex h-12 items-center justify-center rounded-full bg-ink px-6 text-white"
+            className="mt-8 inline-flex h-12 items-center justify-center rounded-md bg-ink px-6 text-white"
           >
             새로 만들기
           </Link>
@@ -124,6 +124,7 @@ export default function ResultPage() {
   }
 
   const { input } = capsule;
+  const { reading } = dual;
   const isMissed = path === "missed";
   const scheduling = countdown !== null;
 
@@ -138,54 +139,68 @@ export default function ResultPage() {
       />
 
       <main className="mx-auto w-full max-w-lg flex-1 px-5 pb-20 pt-2">
-        <p className="animate-fade-up text-[13px] tracking-[0.18em] text-mute">ARRIVED</p>
+        <p className="animate-fade-up text-sm text-mute">{reading.personaLabel}</p>
         <h1 className="animate-fade-up font-display mt-3 text-3xl leading-tight">
-          미래의 나에게서
-          <br />
-          메시지가 도착했습니다.
+          편지가 도착했습니다
         </h1>
         <p className="animate-fade-up mt-3 text-[15px] leading-relaxed text-mute">
           오늘의 네가 없으면, 그 미래도 없습니다.
         </p>
 
-        <div className="animate-fade-up mt-8 grid grid-cols-2 gap-2 rounded-full border border-line bg-white p-1">
+        <section className="animate-fade-up mt-8 border border-line bg-paper px-4 py-5">
+          <p className="text-sm font-medium text-ink">먼저 읽힌 것</p>
+          <dl className="mt-4 space-y-3 text-[14px] leading-relaxed">
+            <div>
+              <dt className="text-mute">진짜 바람</dt>
+              <dd className="mt-0.5 text-ink">{reading.coreDesire}</dd>
+            </div>
+            <div>
+              <dt className="text-mute">흔들리기 쉬운 지점</dt>
+              <dd className="mt-0.5 text-ink">{reading.likelyFriction}</dd>
+            </div>
+            <div>
+              <dt className="text-mute">오늘을 비우면</dt>
+              <dd className="mt-0.5 text-ink">{reading.stakeIfSkipped}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <div className="animate-fade-up mt-8 path-tabs">
           <button
             type="button"
+            className="path-tab"
+            data-active={!isMissed}
             onClick={() => switchPath("kept")}
-            className={`h-10 rounded-full text-sm font-medium transition ${
-              !isMissed ? "bg-ink text-white" : "text-mute hover:text-ink"
-            }`}
           >
-            오늘을 지킨 나
+            지킨 나
           </button>
           <button
             type="button"
+            className="path-tab"
+            data-active={isMissed}
             onClick={() => switchPath("missed")}
-            className={`h-10 rounded-full text-sm font-medium transition ${
-              isMissed ? "bg-ink text-white" : "text-mute hover:text-ink"
-            }`}
           >
-            오늘을 미룬 나
+            미룬 나
           </button>
         </div>
 
         <article
           ref={letterRef}
           key={path}
-          className="animate-fade-up mt-10 border-t border-line pt-8"
+          className="animate-fade-up mt-8 border-t border-line pt-7"
         >
-          <p className="text-[13px] tracking-[0.16em] text-mute">
-            {isMissed ? "FROM. 놓친 미래의 나" : "FROM. 지킨 미래의 나"}
+          <p className="text-sm text-mute">
+            {isMissed ? "미룬 쪽의 나" : "이은 쪽의 나"}
           </p>
           {isMissed ? (
-            <p className="mt-3 text-sm leading-relaxed text-mute">
-              실패 버전이지만, 끝은 아닙니다. 다시 기회가 남아 있습니다.
+            <p className="mt-2 text-sm leading-relaxed text-mute">
+              실패로 끝난 버전이 아닙니다. 다시 이을 여지는 남아 있습니다.
             </p>
           ) : null}
-          <h2 className="font-display mt-4 text-[1.75rem] leading-snug text-ink">
+          <h2 className="font-display mt-4 text-[1.7rem] leading-snug text-ink">
             {active.headline}
           </h2>
-          <p className="letter-body mt-6 text-[16px] leading-[1.85] text-ink/90">
+          <p className="letter-body mt-5 text-[16px] leading-[1.85] text-ink/90">
             {active.message}
           </p>
           <VoicePlayer
@@ -194,40 +209,33 @@ export default function ResultPage() {
             message={active.message}
             action={active.action}
             tone={input.tone}
-            listenLabel={
-              isMissed ? "놓친 미래의 나 목소리로 듣기" : "지킨 미래의 나 목소리로 듣기"
-            }
+            listenLabel={isMissed ? "미룬 나 목소리로 듣기" : "지킨 나 목소리로 듣기"}
           />
         </article>
 
         <section className="mt-10 border-t border-line pt-6">
-          <p className="text-sm text-mute">이 메시지가 기억하는 너의 이유</p>
+          <p className="text-sm text-mute">처음에 적어둔 이유</p>
           <p className="mt-2 text-[15px] leading-relaxed text-ink">“{input.reason}”</p>
         </section>
 
         <section className="mt-10 border-t border-line pt-6">
-          <p className="text-[13px] tracking-[0.14em] text-mute">
-            {isMissed ? "SECOND CHANCE" : "TODAY"}
-          </p>
-          <h3 className="mt-2 text-lg font-medium">
-            {isMissed
-              ? "놓친 미래의 나가 다시 주는 기회"
-              : "미래의 내가 부탁한 오늘의 행동"}
+          <h3 className="text-lg font-medium">
+            {isMissed ? "다시 이을 행동" : "오늘의 행동"}
           </h3>
           <p className="mt-3 text-[16px] leading-relaxed text-ink">{active.action}</p>
 
           <div className="mt-5">
             <PrimaryButton onClick={acceptPromise} disabled={capsule.promiseAccepted}>
               {capsule.promiseAccepted
-                ? "약속했어요 ✓"
+                ? "약속함"
                 : isMissed
-                  ? "다시 기회 잡을게"
+                  ? "다시 이을게"
                   : "오늘 할게"}
             </PrimaryButton>
             {capsule.promiseAccepted ? (
               <p className="mt-3 text-center text-sm text-mute">
-                이 타임캡슐에 대한 오늘의 약속을 기억할게요.
-                {promiseFlash ? " 아래에서 알림 도착도 체험해보세요." : ""}
+                이 타임캡슐에 약속을 남겼습니다.
+                {promiseFlash ? " 아래에서 알림 도착도 눌러보세요." : ""}
               </p>
             ) : null}
           </div>
@@ -236,20 +244,20 @@ export default function ResultPage() {
         <section
           ref={notifyRef}
           className={`mt-10 border-t border-line pt-6 transition ${
-            promiseFlash ? "rounded-2xl bg-white px-4 py-5 ring-1 ring-ink/10" : ""
+            promiseFlash ? "bg-paper px-4 py-5" : ""
           }`}
         >
-          <h3 className="text-lg font-medium">미래 메시지 도착 체험하기</h3>
+          <h3 className="text-lg font-medium">알림 도착 체험</h3>
           <p className="mt-2 text-sm leading-relaxed text-mute">
-            약 5초 뒤, 지금 보고 있는 {isMissed ? "놓친" : "지킨"} 미래의 나 알림이
-            화면 위에 도착합니다.
+            5초 뒤, 지금 보고 있는 {isMissed ? "미룬" : "지킨"} 나의 짧은 알림이
+            위에 뜹니다.
           </p>
           {scheduling ? (
             <p className="mt-4 text-center font-display text-4xl text-ink">{countdown}</p>
           ) : null}
           <div className="mt-5">
             <SecondaryButton onClick={startNotificationDemo} disabled={scheduling}>
-              {scheduling ? "도착 대기 중…" : "미래 메시지 도착 체험하기"}
+              {scheduling ? "도착 대기 중…" : "알림 체험하기"}
             </SecondaryButton>
           </div>
         </section>
@@ -257,7 +265,7 @@ export default function ResultPage() {
         <div className="mt-10 flex flex-col gap-3">
           <Link
             href="/create"
-            className="inline-flex h-12 items-center justify-center rounded-full border border-line text-[15px] transition hover:bg-black/[0.03]"
+            className="inline-flex h-12 items-center justify-center rounded-md border border-line text-[15px] transition hover:bg-black/[0.03]"
           >
             다시 만들기
           </Link>
@@ -265,7 +273,7 @@ export default function ResultPage() {
             href="/capsule"
             className="text-center text-sm text-mute underline-offset-4 hover:underline"
           >
-            저장된 타임캡슐 보기
+            저장된 타임캡슐
           </Link>
         </div>
 

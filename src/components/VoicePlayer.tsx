@@ -70,7 +70,7 @@ export function VoicePlayer({
         {speaking ? "음성 중지" : listenLabel}
       </SecondaryButton>
       <p className="mt-2 text-center text-xs text-mute">
-        {speaking ? "미래의 나가 읽고 있어요…" : "브라우저 음성으로 편지를 읽어줍니다"}
+        {speaking ? "읽고 있어요…" : "기기 음성으로 편지를 읽습니다"}
       </p>
     </div>
   );

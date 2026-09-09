@@ -1,22 +1,23 @@
 import type { Metadata } from "next";
-import { Instrument_Serif, Manrope } from "next/font/google";
+import { Noto_Sans_KR, Noto_Serif_KR } from "next/font/google";
 import "./globals.css";
 
-const display = Instrument_Serif({
-  weight: "400",
+const display = Noto_Serif_KR({
+  weight: ["500", "600"],
   subsets: ["latin"],
   variable: "--font-display",
 });
 
-const body = Manrope({
+const body = Noto_Sans_KR({
+  weight: ["400", "500", "600"],
   subsets: ["latin"],
   variable: "--font-body",
 });
 
 export const metadata: Metadata = {
-  title: "FROM.ME — AI 타임캡슐",
+  title: "FROM.ME",
   description:
-    "목표를 세운 순간, 미래의 내가 오늘을 남긴다. Future Self Persona로 초심을 다시 전달하는 AI 타임캡슐.",
+    "오늘의 선택이 미래의 나를 가른다. 목표와 이유를 바탕으로 지킨 나 / 미룬 나의 목소리를 남기는 타임캡슐.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

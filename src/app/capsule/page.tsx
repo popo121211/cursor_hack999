@@ -12,7 +12,7 @@ export default function CapsuleListPage() {
     <div className="flex min-h-full flex-col">
       <SiteHeader showCapsule={false} />
       <main className="mx-auto w-full max-w-lg flex-1 px-5 pb-16 pt-2">
-        <p className="text-[13px] tracking-[0.18em] text-mute">CAPSULES</p>
+        <p className="text-sm text-mute">보관함</p>
         <h1 className="font-display mt-3 text-3xl">내 타임캡슐</h1>
         <p className="mt-3 text-[15px] text-mute">이 기기에 저장된 최근 메시지입니다.</p>
 

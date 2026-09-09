@@ -112,14 +112,14 @@ export default function CreatePage() {
       {loading ? <GeneratingOverlay key="generating" active /> : null}
 
       <main className="mx-auto w-full max-w-lg flex-1 px-5 pb-16 pt-2">
-        <p className="text-[13px] tracking-[0.18em] text-mute">STEP</p>
+        <p className="text-sm text-mute">작성</p>
         <h1 className="font-display mt-3 text-3xl leading-tight text-ink">
-          지금의 나를
+          목표와 이유를
           <br />
-          미래의 나에게 전하세요
+          남겨주세요
         </h1>
         <p className="mt-3 text-[15px] text-mute">
-          목표와 이유를 적으면, Future Self가 오늘의 행동을 남깁니다.
+          입력은 먼저 해석되고, 그다음 지킨 나 / 미룬 나의 편지로 돌아옵니다.
         </p>
 
         <button
@@ -130,7 +130,7 @@ export default function CreatePage() {
           발표용 예시 채우기
         </button>
         <p className="mt-2 text-sm leading-relaxed text-mute">
-          절절한 목표와 이유 프리셋으로, 이룬 장면 / 미룬 장면 대비를 바로 보여줍니다.
+          심사/발표에서 바로 보여줄 목표·이유 프리셋입니다.
         </p>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-8">
@@ -176,15 +176,15 @@ export default function CreatePage() {
           </Field>
 
           <fieldset>
-            <legend className="text-sm font-medium text-ink">미래의 나에게 듣고 싶은 말투</legend>
+            <legend className="text-sm font-medium text-ink">듣고 싶은 말투</legend>
             <div className="mt-3 space-y-2">
               {TONE_OPTIONS.map((opt) => {
                 const selected = tone === opt.value;
                 return (
                   <label
                     key={opt.value}
-                    className={`flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 transition ${
-                      selected ? "border-ink bg-white" : "border-line bg-transparent hover:bg-white/70"
+                    className={`flex cursor-pointer items-start gap-3 border px-4 py-3 transition ${
+                      selected ? "border-ink bg-paper" : "border-line bg-transparent hover:bg-paper/70"
                     }`}
                   >
                     <input
@@ -208,7 +208,7 @@ export default function CreatePage() {
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
           <PrimaryButton type="submit" disabled={loading}>
-            {loading ? "연결 중…" : "미래의 나 연결하기"}
+            {loading ? "해석 중…" : "편지 받기"}
           </PrimaryButton>
         </form>
       </main>

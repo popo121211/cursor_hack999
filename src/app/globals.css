@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fafafa;
-  --foreground: #111111;
-  --mute: #6b6b6b;
-  --line: #e5e5e5;
-  --paper: #ffffff;
+  --background: #f4f4f2;
+  --foreground: #1a1a1a;
+  --mute: #5c5c5c;
+  --line: #dcdcd8;
+  --paper: #fffcf7;
 }
 
 @theme inline {
@@ -20,19 +20,23 @@
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(ellipse at top, rgba(0, 0, 0, 0.03), transparent 55%),
+    var(--background);
   color: var(--foreground);
-  font-family: var(--font-body), ui-sans-serif, sans-serif;
+  font-family: var(--font-body), "Apple SD Gothic Neo", sans-serif;
 }
 
 .font-display {
-  font-family: var(--font-display), ui-serif, Georgia, serif;
+  font-family: var(--font-display), "Apple SD Gothic Neo", serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 @keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -50,7 +54,7 @@ body {
 }
 
 .animate-fade-up {
-  animation: fade-up 0.55s ease both;
+  animation: fade-up 0.45s ease both;
 }
 
 .animate-progress {
@@ -62,17 +66,38 @@ body {
 }
 
 .field-input {
-  margin-top: 0.6rem;
+  margin-top: 0.55rem;
   width: 100%;
-  border-radius: 1rem;
+  border-radius: 0.35rem;
   border: 1px solid var(--line);
-  background: #fff;
-  padding: 0.85rem 1rem;
+  background: var(--paper);
+  padding: 0.8rem 0.9rem;
   font-size: 15px;
   color: var(--foreground);
   outline: none;
 }
 
 .field-input:focus {
-  border-color: #111;
+  border-color: #1a1a1a;
+}
+
+.path-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.path-tab {
+  height: 2.75rem;
+  border-bottom: 2px solid transparent;
+  font-size: 0.9rem;
+  color: var(--mute);
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.path-tab[data-active="true"] {
+  color: var(--foreground);
+  border-bottom-color: var(--foreground);
+  font-weight: 600;
 }
