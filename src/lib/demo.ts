@@ -1,9 +1,24 @@
 import { CapsuleInput } from "./types";
 
-/** 발표용 프리셋 입력 */
-export const DEMO_INPUT: Omit<CapsuleInput, "createdAt"> = {
-  goal: "이번 공모전에서 수상하기",
-  reason: "내가 만든 서비스를 처음으로 사람들에게 인정받고 싶어서",
-  targetDate: "2026-12-31",
-  tone: "realistic",
-};
+function daysFromToday(days: number) {
+  const d = new Date();
+  d.setHours(12, 0, 0, 0);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/** 발표용 프리셋 — 날짜는 호출 시점에 오늘+60일로 계산 */
+export function getDemoInput(): Omit<CapsuleInput, "createdAt"> {
+  return {
+    goal: "내 이름으로 만든 첫 서비스를 끝까지 세상에 내놓기",
+    reason:
+      "시작만 하고 놓아둔 목표가 너무 많아서. 이번에는 누군가의 초심을 지켜주는 결과물로, 나부터 끝까지 책임지고 싶어서.",
+    letterToFuture:
+      "나중에 읽는 나야. 오늘 이 목표가 막연해도, 시작만 하고 끝내던 예전 나로 돌아가지 마. 초심 잃지 말고, 끝까지 책임진 쪽으로 남아 줘.",
+    targetDate: daysFromToday(60),
+    tone: "gentle",
+  };
+}
+
+/** @deprecated use getDemoInput() for fresh dates */
+export const DEMO_INPUT = getDemoInput();

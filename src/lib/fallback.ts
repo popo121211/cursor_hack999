@@ -1,69 +1,112 @@
-import { CapsuleAIResult, CapsuleInput, Tone } from "./types";
+import {
+  CapsuleAIResult,
+  CapsuleInput,
+  FutureMessage,
+  FutureReading,
+  Tone,
+} from "./types";
 
-function toneLines(tone: Tone, reason: string, goal: string) {
+function buildReading(input: CapsuleInput): FutureReading {
+  const reason = input.reason.trim();
+  const shortReason =
+    reason.length > 36 ? `${reason.slice(0, 36)}…` : reason;
+
+  return {
+    coreDesire: shortReason,
+    likelyFriction: "초반 열정이 식으면, 이유를 다시 꺼내기 전에 미루게 됨",
+    stakeIfSkipped: `"${input.goal}"을(를) 향해 가던 오늘의 연결이 끊김`,
+    personaLabel: "초심을 붙든 나",
+  };
+}
+
+function toneKept(tone: Tone, reason: string, goal: string, letter?: string) {
+  const quote = reason.length > 42 ? `${reason.slice(0, 42)}…` : reason;
+  const note = letter?.trim()
+    ? `네가 그때 남긴 말도 기억해. "${letter.trim().slice(0, 48)}${letter.trim().length > 48 ? "…" : ""}"`
+    : null;
   switch (tone) {
     case "gentle":
       return {
-        headline: "그때의 이유, 아직 여기 있어.",
-        opening: `처음 네가 "${goal}"을(를) 적었을 때, 그 마음 꽤 진지했잖아.`,
-        middle: `"${reason}"라는 말이 아직도 나를 붙잡고 있어.`,
-        close: "완벽한 하루는 필요 없어. 아주 작은 한 걸음이면 돼.",
+        headline: "그 문장을 안 놓친 아침",
+        opening: `모니터 불빛 아래, "${goal}" 관련 파일을 다시 연 상태야.`,
+        middle: [note, `메모에 남은 건 이거야. "${quote}"`].filter(Boolean).join("\n\n"),
+        close: "오늘의 네가 빠지면 이 장면도 없어. 거창할 필요 없고, 오늘 할 수 있는 것만.",
       };
     case "spicy":
       return {
-        headline: "변명은 나중에 하고, 오늘은 한 번만.",
-        opening: `"${goal}" 적어놓고 또 미룰 생각이지?`,
-        middle: `네가 직접 쓴 이유야. "${reason}" — 이건 꽤 간절했잖아.`,
-        close: "거창할 필요 없어. 오늘 할 수 있는 것만 해.",
+        headline: "도망 안 친 날의 결과",
+        opening: `"${goal}" 쪽으로 하루를 붙든 나야. 연설은 없고, 기록만 있어.`,
+        middle: [note, `네가 남긴 이유: "${quote}"`].filter(Boolean).join("\n\n"),
+        close: "오늘 너 없으면 이 미래도 없다. 변명 저장하지 말고, 지금 할 일 하나만.",
       };
     case "realistic":
     default:
       return {
-        headline: "목표보다 먼저, 이유를 다시 보자.",
-        opening: `네가 세운 목표는 "${goal}"이야.`,
-        middle: `그리고 이유는 분명했어. "${reason}"`,
-        close: "감정은 흔들려도, 오늘의 작은 행동은 선택할 수 있어.",
+        headline: "연결이 남은 쪽의 나",
+        opening: `"${goal}"을(를) 완전히 끝낸 상태는 아니야. 다만 끊기지 않은 쪽이지.`,
+        middle: [note, `중심에 남은 문장: "${quote}"`].filter(Boolean).join("\n\n"),
+        close: "오늘의 선택이 이 장면을 만든다. 감정은 나중에 두고, 작은 행동부터.",
       };
   }
 }
 
-function defaultAction(goal: string): string {
-  const g = goal.toLowerCase();
-  if (g.includes("토익") || g.includes("영어") || g.includes("toeic")) {
-    return "영단어 20개를 소리 내어 읽고 표시해두기";
+function toneMissed(tone: Tone, reason: string, goal: string) {
+  const quote = reason.length > 42 ? `${reason.slice(0, 42)}…` : reason;
+  switch (tone) {
+    case "gentle":
+      return {
+        headline: "비워둔 날의 잔상",
+        opening: `"${goal}" 폴더는 그대로고, 손은 다른 데로 가 있어.`,
+        middle: `그래도 "${quote}" — 이건 아직 안 지웠어. 다시 열면 된다.`,
+        close: "실패로 끝난 버전은 아니야. 지금 다시 잇으면 돼.",
+      };
+    case "spicy":
+      return {
+        headline: "미룬 쪽의 나",
+        opening: `적어놓고 비운 결과야. "${goal}"은(는) 멀어졌고.`,
+        middle: `근데 "${quote}"는 아직 남아 있어. 자책 말고 재접속.`,
+        close: "끝이라고 쓰지 마. 오늘 한 번만 다시 열어.",
+      };
+    case "realistic":
+    default:
+      return {
+        headline: "끊긴 연결, 남은 선택",
+        opening: `오늘을 비운 누적이 "${goal}"과의 거리를 벌려 놓았어.`,
+        middle: `이유 — "${quote}" — 는 아직 유효해. 다시 시작하면 갈래가 바뀐다.`,
+        close: "짧게 인정하고, 다음 행동으로 분기점을 옮겨.",
+      };
   }
-  if (g.includes("운동") || g.includes("헬스") || g.includes("다이어트")) {
-    return "운동복으로 갈아입고 10분만 걷기";
-  }
-  if (g.includes("자소서") || g.includes("취업") || g.includes("면접")) {
-    return "자기소개서 첫 문장 하나만 작성하기";
-  }
-  if (g.includes("공모전") || g.includes("해커톤") || g.includes("발표")) {
-    return "발표에서 꼭 말할 핵심 문장 1개를 적어보기";
-  }
-  return "목표와 관련된 일을 오늘 15분만 타이머 맞춰 진행하기";
 }
 
-/** API 실패 시에도 발표/체험이 가능하도록 입력 기반 템플릿 생성 */
-export function buildFallbackResult(input: CapsuleInput): CapsuleAIResult {
-  const lines = toneLines(input.tone, input.reason, input.goal);
-  const action = defaultAction(input.goal);
-
-  return {
-    headline: lines.headline,
-    message: [
-      lines.opening,
-      "",
-      lines.middle,
-      "",
-      "오늘 하기 싫은 마음도 이해해.",
-      lines.close,
-      "",
-      "미래의 나는 네가 오늘 시작해준 덕분에 여기까지 올 수 있었어.",
-    ].join("\n"),
-    action,
-    notificationMessage: truncatePush(`${shortGoal(input.goal)} — 오늘 한 걸음만.`),
-  };
+function defaultAction(goal: string, missed: boolean): string {
+  const g = goal.toLowerCase();
+  if (g.includes("토익") || g.includes("영어") || g.includes("toeic")) {
+    return missed
+      ? "단어장 열고 10개만 표시하기"
+      : "영단어 20개 소리 내어 읽고 표시하기";
+  }
+  if (g.includes("운동") || g.includes("헬스") || g.includes("다이어트")) {
+    return missed ? "운동복 입고 5분 걷기" : "운동복 입고 10분 걷기";
+  }
+  if (g.includes("자소서") || g.includes("취업") || g.includes("면접")) {
+    return missed
+      ? "자소서 파일 열고 한 줄만 고치기"
+      : "자기소개서 첫 문장 하나 쓰기";
+  }
+  if (
+    g.includes("공모전") ||
+    g.includes("해커톤") ||
+    g.includes("발표") ||
+    g.includes("서비스") ||
+    g.includes("세상에")
+  ) {
+    return missed
+      ? "작업 문서 다시 열고 문장 1개만 고치기"
+      : "오늘 꼭 보여줄 핵심 문장 1개 적기";
+  }
+  return missed
+    ? "관련 작업 10분만 다시 시작하기"
+    : "관련 작업 15분 타이머 맞추고 진행하기";
 }
 
 function shortGoal(goal: string) {
@@ -72,4 +115,63 @@ function shortGoal(goal: string) {
 
 function truncatePush(text: string) {
   return text.length > 40 ? `${text.slice(0, 39)}…` : text;
+}
+
+function toMessage(
+  lines: { headline: string; opening: string; middle: string; close: string },
+  action: string,
+  notificationMessage: string,
+): FutureMessage {
+  return {
+    headline: lines.headline,
+    message: [lines.opening, "", lines.middle, "", lines.close].join("\n"),
+    action,
+    notificationMessage: truncatePush(notificationMessage),
+  };
+}
+
+export function buildFallbackResult(input: CapsuleInput): CapsuleAIResult {
+  const reading = buildReading(input);
+  const kept = toMessage(
+    toneKept(input.tone, input.reason, input.goal, input.letterToFuture),
+    defaultAction(input.goal, false),
+    `${shortGoal(input.goal)} — 오늘의 연결이 미래야.`,
+  );
+  const missed = toMessage(
+    toneMissed(input.tone, input.reason, input.goal),
+    defaultAction(input.goal, true),
+    `${shortGoal(input.goal)} — 끊어도, 다시 이을 수 있어.`,
+  );
+
+  return { ...kept, reading, missed };
+}
+
+export function ensureDualResult(
+  result: CapsuleAIResult | (FutureMessage & {
+    missed?: FutureMessage;
+    reading?: FutureReading;
+  }),
+  input: CapsuleInput,
+): CapsuleAIResult {
+  const fallback = buildFallbackResult(input);
+  const missed =
+    result.missed?.headline && result.missed.message && result.missed.action
+      ? result.missed
+      : fallback.missed;
+  const reading =
+    result.reading?.coreDesire &&
+    result.reading.likelyFriction &&
+    result.reading.stakeIfSkipped &&
+    result.reading.personaLabel
+      ? result.reading
+      : fallback.reading;
+
+  return {
+    headline: result.headline || fallback.headline,
+    message: result.message || fallback.message,
+    action: result.action || fallback.action,
+    notificationMessage: result.notificationMessage || fallback.notificationMessage,
+    reading,
+    missed,
+  };
 }

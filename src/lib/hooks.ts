@@ -8,6 +8,15 @@ import {
 } from "./storage";
 import { Capsule } from "./types";
 
+/** localStorage 읽기 전 hydration 깜빡임 방지 */
+export function useHasMounted() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+}
+
 export function useCapsules(): Capsule[] {
   return useSyncExternalStore(subscribeCapsules, getCapsules, () => []);
 }

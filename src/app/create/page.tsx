@@ -5,8 +5,12 @@ import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PrimaryButton } from "@/components/Buttons";
 import { GeneratingOverlay } from "@/components/GeneratingOverlay";
-import { DEMO_INPUT } from "@/lib/demo";
+import { ReasonVoiceInput } from "@/components/ReasonVoiceInput";
+import { VoiceMemoRecorder } from "@/components/VoiceMemoRecorder";
+import { getDemoInput } from "@/lib/demo";
+import { ensureDualResult } from "@/lib/fallback";
 import { saveCapsule } from "@/lib/storage";
+import { saveVoiceMemo } from "@/lib/voiceStore";
 import { Capsule, CapsuleAIResult, CapsuleInput, TONE_OPTIONS, Tone } from "@/lib/types";
 
 function todayISODate() {
@@ -19,16 +23,25 @@ export default function CreatePage() {
 
   const [goal, setGoal] = useState("");
   const [reason, setReason] = useState("");
+  const [letterToFuture, setLetterToFuture] = useState("");
   const [targetDate, setTargetDate] = useState("");
   const [tone, setTone] = useState<Tone>("realistic");
+  const [reasonFromVoice, setReasonFromVoice] = useState(false);
+  const [voiceMemo, setVoiceMemo] = useState<Blob | null>(null);
+  const [recorderKey, setRecorderKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   function fillDemo() {
-    setGoal(DEMO_INPUT.goal);
-    setReason(DEMO_INPUT.reason);
-    setTargetDate(DEMO_INPUT.targetDate);
-    setTone(DEMO_INPUT.tone);
+    const demo = getDemoInput();
+    setGoal(demo.goal);
+    setReason(demo.reason);
+    setLetterToFuture(demo.letterToFuture ?? "");
+    setTargetDate(demo.targetDate);
+    setTone(demo.tone);
+    setReasonFromVoice(false);
+    setVoiceMemo(null);
+    setRecorderKey((k) => k + 1);
     setError(null);
   }
 
@@ -38,6 +51,7 @@ export default function CreatePage() {
 
     const trimmedGoal = goal.trim();
     const trimmedReason = reason.trim();
+    const trimmedLetter = letterToFuture.trim();
 
     if (trimmedGoal.length < 5 || trimmedGoal.length > 80) {
       setError("목표는 5~80자로 적어주세요.");
@@ -47,16 +61,22 @@ export default function CreatePage() {
       setError("이유는 10~200자로 적어주세요.");
       return;
     }
+    if (trimmedLetter.length < 10 || trimmedLetter.length > 300) {
+      setError("미래의 나에게 남길 메시지는 10~300자로 적어주세요.");
+      return;
+    }
     if (!targetDate || targetDate < minDate) {
-      setError("목표 날짜는 오늘 이후로 선택해주세요.");
+      setError("목표 날짜는 오늘 포함 이후로 선택해주세요.");
       return;
     }
 
     const input: CapsuleInput = {
       goal: trimmedGoal,
       reason: trimmedReason,
+      letterToFuture: trimmedLetter,
       targetDate,
       tone,
+      reasonFromVoice,
       createdAt: new Date().toISOString(),
     };
 
@@ -80,7 +100,6 @@ export default function CreatePage() {
         throw new Error(data.error || "생성에 실패했습니다.");
       }
 
-      // 로딩 연출 최소 시간
       const elapsed = Date.now() - started;
       if (elapsed < 2800) {
         await new Promise((r) => setTimeout(r, 2800 - elapsed));
@@ -89,11 +108,16 @@ export default function CreatePage() {
       const capsule: Capsule = {
         id: crypto.randomUUID(),
         input,
-        result: data.result,
+        result: ensureDualResult(data.result, input),
         promiseAccepted: false,
+        hasVoiceMemo: !!voiceMemo,
         updatedAt: new Date().toISOString(),
       };
+      if (voiceMemo) {
+        await saveVoiceMemo(capsule.id, voiceMemo);
+      }
       saveCapsule(capsule);
+      setLoading(false);
       router.push(`/result/${capsule.id}`);
     } catch (err) {
       setLoading(false);
@@ -101,22 +125,24 @@ export default function CreatePage() {
     }
   }
 
+  const goalLen = goal.trim().length;
+  const reasonLen = reason.trim().length;
+  const letterLen = letterToFuture.trim().length;
+
   return (
     <div className="flex min-h-full flex-col">
       <SiteHeader />
-      {loading ? (
-          <GeneratingOverlay key="generating" active />
-        ) : null}
+      {loading ? <GeneratingOverlay key="generating" active /> : null}
 
-      <main className="mx-auto w-full max-w-lg flex-1 px-5 pb-16 pt-2">
-        <p className="text-[13px] tracking-[0.18em] text-mute">STEP</p>
-        <h1 className="font-display mt-3 text-3xl leading-tight text-ink">
-          지금의 나를
+      <main className="page-shell flex-1 pb-20 pt-2">
+        <p className="section-label animate-fade-up">Write</p>
+        <h1 className="animate-fade-up font-display mt-3 text-[2.4rem] leading-tight text-ink">
+          목표와 이유를
           <br />
-          미래의 나에게 전하세요
+          남겨주세요
         </h1>
-        <p className="mt-3 text-[15px] text-mute">
-          목표와 이유를 적으면, Future Self가 오늘의 행동을 남깁니다.
+        <p className="animate-fade-up mt-3 text-[15px] leading-relaxed text-mute">
+          글과 함께 내 목소리를 녹음해 두면, 나중에 타임캡슐에서 다시 들을 수 있어요.
         </p>
 
         <button
@@ -126,9 +152,16 @@ export default function CreatePage() {
         >
           발표용 예시 채우기
         </button>
+        <p className="mt-2 text-sm leading-relaxed text-mute">
+          심사/발표에서 바로 보여줄 목표·이유 프리셋입니다.
+        </p>
 
-        <form onSubmit={onSubmit} className="mt-8 space-y-8">
-          <Field label="이루고 싶은 목표" hint="예: 토익 900점 받기">
+        <form onSubmit={onSubmit} className="animate-soft-in mt-8 space-y-7 letter-sheet">
+          <Field
+            label="이루고 싶은 목표"
+            hint="예: 내 이름으로 만든 첫 서비스를 끝까지 세상에 내놓기"
+            counter={`${goalLen}/80 · 최소 5자`}
+          >
             <input
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
@@ -139,18 +172,61 @@ export default function CreatePage() {
             />
           </Field>
 
-          <Field label="왜 이루고 싶은가요?" hint="초심이 되는 이유를 구체적으로">
+          <Field
+            label="왜 이루고 싶은가요?"
+            hint="초심이 되는 이유를 구체적으로"
+            counter={`${reasonLen}/200 · 최소 10자`}
+          >
             <textarea
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
+              onChange={(e) => {
+                setReason(e.target.value);
+                setReasonFromVoice(false);
+              }}
               className="field-input min-h-[120px] resize-none"
               placeholder="이 목표가 중요한 이유를 적어주세요"
               maxLength={200}
               required
             />
+            <ReasonVoiceInput
+              value={reason}
+              onChange={(next, meta) => {
+                setReason(next);
+                if (meta?.fromVoice) setReasonFromVoice(true);
+              }}
+            />
+            {reasonFromVoice ? (
+              <p className="mt-1 text-xs text-mute">음성으로 남긴 이유입니다.</p>
+            ) : null}
           </Field>
 
-          <Field label="목표 날짜">
+          <Field
+            label="미래의 나에게 직접 전할 말"
+            hint="AI가 대신 쓰지 않는, 지금의 내 문장"
+            counter={`${letterLen}/300 · 최소 10자`}
+          >
+            <textarea
+              value={letterToFuture}
+              onChange={(e) => setLetterToFuture(e.target.value)}
+              className="field-input min-h-[140px] resize-none"
+              placeholder="나중에 읽는 나에게. 오늘은…"
+              maxLength={300}
+              required
+            />
+          </Field>
+
+          <Field
+            label="음성 메모 (선택)"
+            hint="지금 녹음한 목소리를 나중에 타임캡슐에서 재생합니다"
+          >
+            <VoiceMemoRecorder
+              key={recorderKey}
+              value={voiceMemo}
+              onChange={setVoiceMemo}
+            />
+          </Field>
+
+          <Field label="목표 날짜" hint="오늘 포함, 이후 날짜">
             <input
               type="date"
               value={targetDate}
@@ -162,15 +238,17 @@ export default function CreatePage() {
           </Field>
 
           <fieldset>
-            <legend className="text-sm font-medium text-ink">미래의 나에게 듣고 싶은 말투</legend>
+            <legend className="text-sm font-medium text-ink">듣고 싶은 말투</legend>
             <div className="mt-3 space-y-2">
               {TONE_OPTIONS.map((opt) => {
                 const selected = tone === opt.value;
                 return (
                   <label
                     key={opt.value}
-                    className={`flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 transition ${
-                      selected ? "border-ink bg-white" : "border-line bg-transparent hover:bg-white/70"
+                    className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition ${
+                      selected
+                        ? "border-ink/40 bg-white"
+                        : "border-line bg-white/40 hover:bg-white/70"
                     }`}
                   >
                     <input
@@ -194,7 +272,7 @@ export default function CreatePage() {
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
           <PrimaryButton type="submit" disabled={loading}>
-            {loading ? "연결 중…" : "미래의 나 연결하기"}
+            {loading ? "해석 중…" : "편지 받기"}
           </PrimaryButton>
         </form>
       </main>
@@ -205,15 +283,20 @@ export default function CreatePage() {
 function Field({
   label,
   hint,
+  counter,
   children,
 }: {
   label: string;
   hint?: string;
+  counter?: string;
   children: React.ReactNode;
 }) {
   return (
     <label className="block">
-      <span className="text-sm font-medium text-ink">{label}</span>
+      <span className="flex items-baseline justify-between gap-3">
+        <span className="text-sm font-medium text-ink">{label}</span>
+        {counter ? <span className="text-xs text-mute">{counter}</span> : null}
+      </span>
       {hint ? <span className="mt-1 block text-sm text-mute">{hint}</span> : null}
       {children}
     </label>
