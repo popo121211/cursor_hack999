@@ -25,16 +25,16 @@ export function GeneratingOverlay({ active }: { active: boolean }) {
   if (!active) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-[#e9ecef]/88 px-8 backdrop-blur-sm">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-[#dfe5ec]/86 px-8 backdrop-blur-md">
       <div className="letter-sheet w-full max-w-sm text-center">
-        <p className="mb-5 font-display text-lg text-ink">FROM.ME</p>
+        <p className="mb-6 font-display text-lg tracking-[-0.03em] text-ink">FROM.ME</p>
         <p
           key={index}
-          className="animate-fade-up text-xl leading-relaxed text-ink sm:text-2xl"
+          className="animate-fade-up font-display text-[1.45rem] leading-relaxed text-ink sm:text-[1.65rem]"
         >
           {STEPS[index]}
         </p>
-        <div className="mx-auto mt-10 h-px w-28 overflow-hidden bg-line">
+        <div className="mx-auto mt-11 h-px w-32 overflow-hidden bg-line">
           <div className="h-full w-1/2 animate-progress bg-ink" />
         </div>
       </div>
