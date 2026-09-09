@@ -269,33 +269,15 @@ body > * {
 
 .hero-stage {
   position: relative;
-  min-height: min(62vh, 560px);
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: flex-start;
   overflow: visible;
 }
 
-/* 풀블리드 안개 — page-shell 사각 프레임 / 가로선 제거 */
+/* 레거시: 더 이상 사각 패널로 쓰지 않음 (혹시 남은 마크업 대비) */
 .hero-plane {
-  pointer-events: none;
-  position: absolute;
-  top: -16%;
-  bottom: -12%;
-  left: calc(50% - 50vw);
-  right: calc(50% - 50vw);
-  z-index: 0;
-  background:
-    radial-gradient(
-      ellipse 90% 70% at 50% 38%,
-      rgba(255, 255, 255, 0.5),
-      transparent 72%
-    ),
-    radial-gradient(
-      ellipse 110% 80% at 50% 100%,
-      rgba(183, 197, 212, 0.28),
-      transparent 75%
-    );
+  display: none;
 }
 
 .hero-mark {
