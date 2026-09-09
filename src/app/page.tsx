@@ -36,7 +36,7 @@ export default function HomePage() {
         </div>
 
         <p className="animate-fade-up mt-8 text-[13px] leading-relaxed text-mute">
-          AI Future Self · 오늘의 행동 · 알림 체험
+          AI Future Self · 음성으로 듣기 · 알림 체험
         </p>
       </main>
     </div>

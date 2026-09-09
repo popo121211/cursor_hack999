@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PrimaryButton, SecondaryButton } from "@/components/Buttons";
 import { PushToast } from "@/components/PushToast";
+import { VoicePlayer } from "@/components/VoicePlayer";
 import { useCapsule } from "@/lib/hooks";
 import { updateCapsule } from "@/lib/storage";
 
@@ -92,6 +93,12 @@ export default function ResultPage() {
           <p className="letter-body mt-6 text-[16px] leading-[1.85] text-ink/90">
             {result.message}
           </p>
+          <VoicePlayer
+            headline={result.headline}
+            message={result.message}
+            action={result.action}
+            tone={input.tone}
+          />
         </article>
 
         <section className="mt-10 border-t border-line pt-6">
