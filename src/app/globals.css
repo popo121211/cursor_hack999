@@ -276,26 +276,25 @@ body > * {
   overflow: visible;
 }
 
-/* 풀블리드 안개 — page-shell 안에 갇힌 사각 프레임처럼 보이지 않게 */
+/* 풀블리드 안개 — page-shell 사각 프레임 / 가로선 제거 */
 .hero-plane {
   pointer-events: none;
   position: absolute;
-  left: 50%;
-  top: -12%;
-  bottom: -8%;
+  top: -16%;
+  bottom: -12%;
+  left: calc(50% - 50vw);
+  right: calc(50% - 50vw);
   z-index: 0;
-  width: 100vw;
-  transform: translateX(-50%);
   background:
     radial-gradient(
-      ellipse 72% 58% at 48% 42%,
-      rgba(255, 255, 255, 0.42),
-      transparent 68%
+      ellipse 90% 70% at 50% 38%,
+      rgba(255, 255, 255, 0.5),
+      transparent 72%
     ),
     radial-gradient(
-      ellipse 90% 70% at 55% 88%,
-      rgba(183, 197, 212, 0.32),
-      transparent 72%
+      ellipse 110% 80% at 50% 100%,
+      rgba(183, 197, 212, 0.28),
+      transparent 75%
     );
 }
 
