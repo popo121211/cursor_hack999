@@ -10,6 +10,9 @@ export type Emotion =
 /** 오늘을 지킨 미래 vs 오늘을 미룬 미래 */
 export type FuturePath = "kept" | "missed";
 
+/** 사용자가 오늘 행동을 실제로 했는지 */
+export type ActionOutcome = "done" | "skipped";
+
 export interface CapsuleInput {
   goal: string;
   reason: string;
@@ -17,21 +20,18 @@ export interface CapsuleInput {
   tone: Tone;
   emotion?: Emotion;
   createdAt: string;
+  /** 음성으로 이유를 입력했는지 (데모/심사 포인트) */
+  reasonFromVoice?: boolean;
 }
 
-/** AI가 입력에서 먼저 뽑는 해석 레이어 — 단순 편지 생성기와 차별점 */
+/** AI가 입력에서 먼저 뽑는 해석 레이어 */
 export interface FutureReading {
-  /** 이유가 가리키는 진짜 바람 (한 줄) */
   coreDesire: string;
-  /** 작심삼일로 빠지기 쉬운 지점 */
   likelyFriction: string;
-  /** 오늘을 비웠을 때 잃는 것 */
   stakeIfSkipped: string;
-  /** 이 타임캡슐의 미래 자아 호칭 */
   personaLabel: string;
 }
 
-/** 단일 Future Self 메시지 묶음 */
 export interface FutureMessage {
   headline: string;
   message: string;
@@ -41,8 +41,9 @@ export interface FutureMessage {
 
 export interface CapsuleAIResult extends FutureMessage {
   reading: FutureReading;
-  /** 오늘을 미룬 미래의 나 — 실패를 인정하되 다시 기회를 준다 */
   missed: FutureMessage;
+  /** 재분기 후 AI가 남긴 한 줄 요약 */
+  branchShift?: string;
 }
 
 export interface Capsule {
@@ -51,6 +52,7 @@ export interface Capsule {
   result: CapsuleAIResult;
   promiseAccepted: boolean;
   promiseCompleted?: boolean;
+  actionOutcome?: ActionOutcome | null;
   updatedAt: string;
 }
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PrimaryButton } from "@/components/Buttons";
 import { GeneratingOverlay } from "@/components/GeneratingOverlay";
+import { ReasonVoiceInput } from "@/components/ReasonVoiceInput";
 import { getDemoInput } from "@/lib/demo";
 import { ensureDualResult } from "@/lib/fallback";
 import { saveCapsule } from "@/lib/storage";
@@ -22,6 +23,7 @@ export default function CreatePage() {
   const [reason, setReason] = useState("");
   const [targetDate, setTargetDate] = useState("");
   const [tone, setTone] = useState<Tone>("realistic");
+  const [reasonFromVoice, setReasonFromVoice] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -31,6 +33,7 @@ export default function CreatePage() {
     setReason(demo.reason);
     setTargetDate(demo.targetDate);
     setTone(demo.tone);
+    setReasonFromVoice(false);
     setError(null);
   }
 
@@ -59,6 +62,7 @@ export default function CreatePage() {
       reason: trimmedReason,
       targetDate,
       tone,
+      reasonFromVoice,
       createdAt: new Date().toISOString(),
     };
 
@@ -119,7 +123,8 @@ export default function CreatePage() {
           남겨주세요
         </h1>
         <p className="mt-3 text-[15px] text-mute">
-          입력은 먼저 해석되고, 그다음 지킨 나 / 미룬 나의 편지로 돌아옵니다.
+          텍스트로 적거나, 말로 이유를 남길 수 있어요. 입력이 해석된 뒤 지킨 나 / 미룬 나
+          편지로 돌아옵니다.
         </p>
 
         <button
@@ -156,12 +161,25 @@ export default function CreatePage() {
           >
             <textarea
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
+              onChange={(e) => {
+                setReason(e.target.value);
+                setReasonFromVoice(false);
+              }}
               className="field-input min-h-[120px] resize-none"
               placeholder="이 목표가 중요한 이유를 적어주세요"
               maxLength={200}
               required
             />
+            <ReasonVoiceInput
+              value={reason}
+              onChange={(next, meta) => {
+                setReason(next);
+                if (meta?.fromVoice) setReasonFromVoice(true);
+              }}
+            />
+            {reasonFromVoice ? (
+              <p className="mt-1 text-xs text-mute">음성으로 남긴 이유입니다.</p>
+            ) : null}
           </Field>
 
           <Field label="목표 날짜" hint="오늘 포함, 이후 날짜">

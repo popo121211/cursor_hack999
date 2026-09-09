@@ -24,7 +24,7 @@ export default function HomePage() {
         </p>
 
         <p className="animate-fade-up mt-4 max-w-sm text-[15px] leading-relaxed text-mute">
-          목표와 이유를 남기면, 지킨 나와 미룬 나의 목소리가 돌아옵니다.
+          말로 이유를 남기고, 오늘 행동 결과에 따라 미래가 다시 갈라집니다.
         </p>
 
         <div className="animate-fade-up mt-9">

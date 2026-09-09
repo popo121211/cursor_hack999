@@ -10,7 +10,13 @@ import { VoicePlayer } from "@/components/VoicePlayer";
 import { ensureDualResult } from "@/lib/fallback";
 import { useCapsule, useHasMounted } from "@/lib/hooks";
 import { updateCapsule } from "@/lib/storage";
-import { FuturePath, TONE_OPTIONS, pickFutureMessage } from "@/lib/types";
+import {
+  ActionOutcome,
+  CapsuleAIResult,
+  FuturePath,
+  TONE_OPTIONS,
+  pickFutureMessage,
+} from "@/lib/types";
 
 export default function ResultPage() {
   const params = useParams<{ id: string }>();
@@ -20,8 +26,11 @@ export default function ResultPage() {
   const [toastVisible, setToastVisible] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [promiseFlash, setPromiseFlash] = useState(false);
+  const [rebranching, setRebranching] = useState(false);
+  const [rebranchError, setRebranchError] = useState<string | null>(null);
   const letterRef = useRef<HTMLElement>(null);
   const notifyRef = useRef<HTMLElement>(null);
+  const branchRef = useRef<HTMLElement>(null);
   const timerRef = useRef<number | null>(null);
   const tickRef = useRef<number | null>(null);
 
@@ -54,8 +63,48 @@ export default function ResultPage() {
     updateCapsule(capsule.id, { promiseAccepted: true });
     setPromiseFlash(true);
     window.setTimeout(() => {
-      notifyRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      branchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 250);
+  }
+
+  async function reportOutcome(outcome: ActionOutcome) {
+    if (!capsule || !dual || rebranching) return;
+    setRebranchError(null);
+    setRebranching(true);
+
+    try {
+      const res = await fetch("/api/rebranch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          input: capsule.input,
+          previous: dual,
+          outcome,
+        }),
+      });
+      const data = (await res.json()) as {
+        result?: CapsuleAIResult;
+        error?: string;
+      };
+      if (!res.ok || !data.result) {
+        throw new Error(data.error || "재분기에 실패했습니다.");
+      }
+
+      const next = ensureDualResult(data.result, capsule.input);
+      updateCapsule(capsule.id, {
+        result: next,
+        actionOutcome: outcome,
+        promiseCompleted: outcome === "done",
+      });
+      setPath(outcome === "done" ? "kept" : "missed");
+      window.setTimeout(() => {
+        letterRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 200);
+    } catch (err) {
+      setRebranchError(err instanceof Error ? err.message : "다시 시도해주세요.");
+    } finally {
+      setRebranching(false);
+    }
   }
 
   function startNotificationDemo() {
@@ -127,6 +176,7 @@ export default function ResultPage() {
   const { reading } = dual;
   const isMissed = path === "missed";
   const scheduling = countdown !== null;
+  const alreadyBranched = !!capsule.actionOutcome;
 
   return (
     <div className="flex min-h-full flex-col">
@@ -146,6 +196,15 @@ export default function ResultPage() {
         <p className="animate-fade-up mt-3 text-[15px] leading-relaxed text-mute">
           오늘의 네가 없으면, 그 미래도 없습니다.
         </p>
+        {input.reasonFromVoice ? (
+          <p className="animate-fade-up mt-2 text-xs text-mute">이 이유는 음성으로 남겼습니다.</p>
+        ) : null}
+
+        {dual.branchShift ? (
+          <p className="animate-fade-up mt-4 border-l-2 border-ink/30 pl-3 text-[15px] leading-relaxed text-ink">
+            {dual.branchShift}
+          </p>
+        ) : null}
 
         <section className="animate-fade-up mt-8 border border-line bg-paper px-4 py-5">
           <p className="text-sm font-medium text-ink">먼저 읽힌 것</p>
@@ -186,12 +245,10 @@ export default function ResultPage() {
 
         <article
           ref={letterRef}
-          key={path}
+          key={`${path}-${capsule.updatedAt}`}
           className="animate-fade-up mt-8 border-t border-line pt-7"
         >
-          <p className="text-sm text-mute">
-            {isMissed ? "미룬 쪽의 나" : "이은 쪽의 나"}
-          </p>
+          <p className="text-sm text-mute">{isMissed ? "미룬 쪽의 나" : "이은 쪽의 나"}</p>
           {isMissed ? (
             <p className="mt-2 text-sm leading-relaxed text-mute">
               실패로 끝난 버전이 아닙니다. 다시 이을 여지는 남아 있습니다.
@@ -204,7 +261,7 @@ export default function ResultPage() {
             {active.message}
           </p>
           <VoicePlayer
-            key={`voice-${path}`}
+            key={`voice-${path}-${capsule.updatedAt}`}
             headline={active.headline}
             message={active.message}
             action={active.action}
@@ -234,11 +291,43 @@ export default function ResultPage() {
             </PrimaryButton>
             {capsule.promiseAccepted ? (
               <p className="mt-3 text-center text-sm text-mute">
-                이 타임캡슐에 약속을 남겼습니다.
-                {promiseFlash ? " 아래에서 알림 도착도 눌러보세요." : ""}
+                약속이 남았습니다. 아래에서 실제 결과로 미래를 다시 갈라보세요.
+                {promiseFlash ? "" : ""}
               </p>
             ) : null}
           </div>
+        </section>
+
+        <section ref={branchRef} className="mt-10 border-t border-line pt-6">
+          <h3 className="text-lg font-medium">행동 결과로 미래 다시 가르기</h3>
+          <p className="mt-2 text-sm leading-relaxed text-mute">
+            오늘 행동을 했는지에 따라 AI가 메시지·행동 난이도·기울기를 다시 계산합니다.
+          </p>
+
+          {alreadyBranched ? (
+            <p className="mt-4 text-[15px] text-ink">
+              반영됨: {capsule.actionOutcome === "done" ? "해낸 쪽" : "미룬 쪽"}
+            </p>
+          ) : (
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <PrimaryButton
+                onClick={() => reportOutcome("done")}
+                disabled={!capsule.promiseAccepted || rebranching}
+              >
+                {rebranching ? "계산 중…" : "오늘 했다"}
+              </PrimaryButton>
+              <SecondaryButton
+                onClick={() => reportOutcome("skipped")}
+                disabled={!capsule.promiseAccepted || rebranching}
+              >
+                {rebranching ? "계산 중…" : "못 했다"}
+              </SecondaryButton>
+            </div>
+          )}
+          {!capsule.promiseAccepted ? (
+            <p className="mt-3 text-xs text-mute">먼저 약속을 남긴 뒤 결과를 선택하세요.</p>
+          ) : null}
+          {rebranchError ? <p className="mt-3 text-sm text-red-600">{rebranchError}</p> : null}
         </section>
 
         <section
@@ -249,8 +338,7 @@ export default function ResultPage() {
         >
           <h3 className="text-lg font-medium">알림 도착 체험</h3>
           <p className="mt-2 text-sm leading-relaxed text-mute">
-            5초 뒤, 지금 보고 있는 {isMissed ? "미룬" : "지킨"} 나의 짧은 알림이
-            위에 뜹니다.
+            5초 뒤, 지금 보고 있는 {isMissed ? "미룬" : "지킨"} 나의 짧은 알림이 위에 뜹니다.
           </p>
           {scheduling ? (
             <p className="mt-4 text-center font-display text-4xl text-ink">{countdown}</p>

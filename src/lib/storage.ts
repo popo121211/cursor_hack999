@@ -58,7 +58,9 @@ export function saveCapsule(capsule: Capsule): void {
 
 export function updateCapsule(
   id: string,
-  patch: Partial<Pick<Capsule, "promiseAccepted" | "promiseCompleted" | "result">>,
+  patch: Partial<
+    Pick<Capsule, "promiseAccepted" | "promiseCompleted" | "result" | "actionOutcome">
+  >,
 ): Capsule | null {
   const capsules = [...readCapsules()];
   const index = capsules.findIndex((c) => c.id === id);
