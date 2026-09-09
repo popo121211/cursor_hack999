@@ -193,6 +193,10 @@ export function VoiceMemoRecorder({ value, onChange }: VoiceMemoRecorderProps) {
       setError("오디오 파일만 첨부할 수 있어요. (webm, mp3, wav 등)");
       return;
     }
+    if (file.size === 0) {
+      setError("빈 파일이에요. 다른 오디오를 선택해주세요.");
+      return;
+    }
     if (file.size > MAX_FILE_BYTES) {
       setError("파일이 너무 커요. 3MB 이하로 첨부해주세요.");
       return;

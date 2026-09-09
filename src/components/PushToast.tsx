@@ -22,13 +22,13 @@ export function PushToast({ visible, body, onOpen, onDismiss }: PushToastProps) 
       <button
         type="button"
         onClick={onOpen}
-        className={`w-full border border-black/5 bg-white/95 p-4 text-left shadow-[0_16px_40px_rgba(20,22,28,0.12)] backdrop-blur ${
+        className={`w-full border border-black/5 bg-white/95 p-4 text-left shadow-[0_18px_40px_rgba(18,21,27,0.12)] backdrop-blur-md ${
           visible ? "animate-soft-in" : ""
         }`}
       >
-        <div className="mb-1 flex items-center justify-between gap-3">
+        <div className="mb-1.5 flex items-center justify-between gap-3">
           <span className="font-display text-[15px] text-ink">FROM.ME</span>
-          <span className="text-[11px] text-mute">지금</span>
+          <span className="text-[11px] tracking-[0.06em] text-mute">지금</span>
         </div>
         <p className="text-[13px] font-medium text-ink">
           미래의 나에게서 메시지가 도착했습니다.

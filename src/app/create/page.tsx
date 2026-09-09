@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PrimaryButton } from "@/components/Buttons";
@@ -13,13 +13,16 @@ import { saveCapsule } from "@/lib/storage";
 import { saveVoiceMemo } from "@/lib/voiceStore";
 import { Capsule, CapsuleAIResult, CapsuleInput, TONE_OPTIONS, Tone } from "@/lib/types";
 
-function todayISODate() {
-  return new Date().toISOString().slice(0, 10);
+function localISODate(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 export default function CreatePage() {
   const router = useRouter();
-  const minDate = useMemo(() => todayISODate(), []);
+  const [minDate, setMinDate] = useState(() => localISODate());
 
   const [goal, setGoal] = useState("");
   const [reason, setReason] = useState("");
@@ -31,6 +34,10 @@ export default function CreatePage() {
   const [recorderKey, setRecorderKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setMinDate(localISODate());
+  }, []);
 
   function fillDemo() {
     const demo = getDemoInput();
@@ -52,6 +59,7 @@ export default function CreatePage() {
     const trimmedGoal = goal.trim();
     const trimmedReason = reason.trim();
     const trimmedLetter = letterToFuture.trim();
+    const today = localISODate();
 
     if (trimmedGoal.length < 5 || trimmedGoal.length > 80) {
       setError("목표는 5~80자로 적어주세요.");
@@ -65,7 +73,7 @@ export default function CreatePage() {
       setError("미래의 나에게 남길 메시지는 10~300자로 적어주세요.");
       return;
     }
-    if (!targetDate || targetDate < minDate) {
+    if (!targetDate || targetDate < today) {
       setError("목표 날짜는 오늘 포함 이후로 선택해주세요.");
       return;
     }
@@ -105,18 +113,28 @@ export default function CreatePage() {
         await new Promise((r) => setTimeout(r, 2800 - elapsed));
       }
 
+      const capsuleId = crypto.randomUUID();
+      let hasVoiceMemo = false;
+      if (voiceMemo && voiceMemo.size > 0) {
+        try {
+          await saveVoiceMemo(capsuleId, voiceMemo);
+          hasVoiceMemo = true;
+        } catch {
+          // 편지는 저장하고, 음성만 실패했을 때 계속 진행
+        }
+      }
+
       const capsule: Capsule = {
-        id: crypto.randomUUID(),
+        id: capsuleId,
         input,
         result: ensureDualResult(data.result, input),
         promiseAccepted: false,
-        hasVoiceMemo: !!voiceMemo,
+        hasVoiceMemo,
         updatedAt: new Date().toISOString(),
       };
-      if (voiceMemo) {
-        await saveVoiceMemo(capsule.id, voiceMemo);
+      if (!saveCapsule(capsule)) {
+        throw new Error("이 브라우저에 저장할 수 없어요. 시크릿 모드를 끄고 다시 시도해주세요.");
       }
-      saveCapsule(capsule);
       setLoading(false);
       router.push(`/result/${capsule.id}`);
     } catch (err) {
@@ -136,19 +154,19 @@ export default function CreatePage() {
 
       <main className="page-shell flex-1 pb-20 pt-2">
         <p className="section-label animate-fade-up">Write</p>
-        <h1 className="animate-fade-up font-display mt-3 text-[2.4rem] leading-tight text-ink">
+        <h1 className="animate-fade-up delay-1 font-display mt-3 text-[2.55rem] leading-[1.08] text-ink">
           목표와 이유를
           <br />
           남겨주세요
         </h1>
-        <p className="animate-fade-up mt-3 text-[15px] leading-relaxed text-mute">
-          글과 함께 내 목소리를 녹음해 두면, 나중에 타임캡슐에서 다시 들을 수 있어요.
+        <p className="animate-fade-up delay-2 mt-4 max-w-md text-[15px] leading-relaxed text-mute">
+          글과 목소리로, 지금의 나를 미래의 나에게 보냅니다.
         </p>
 
         <button
           type="button"
           onClick={fillDemo}
-          className="mt-5 text-left text-sm text-ink underline underline-offset-4 opacity-70 transition hover:opacity-100"
+          className="animate-fade-up delay-3 mt-6 text-left text-sm text-accent underline underline-offset-[5px] transition hover:text-ink"
         >
           발표용 예시 채우기
         </button>
@@ -156,7 +174,7 @@ export default function CreatePage() {
           심사/발표에서 바로 보여줄 목표·이유 프리셋입니다.
         </p>
 
-        <form onSubmit={onSubmit} className="animate-soft-in mt-8 space-y-7 letter-sheet">
+        <form onSubmit={onSubmit} className="animate-soft-in write-surface mt-8">
           <Field
             label="이루고 싶은 목표"
             hint="예: 내 이름으로 만든 첫 서비스를 끝까지 세상에 내놓기"
@@ -245,11 +263,8 @@ export default function CreatePage() {
                 return (
                   <label
                     key={opt.value}
-                    className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition ${
-                      selected
-                        ? "border-ink/40 bg-white"
-                        : "border-line bg-white/40 hover:bg-white/70"
-                    }`}
+                    className="tone-option"
+                    data-active={selected}
                   >
                     <input
                       type="radio"
@@ -257,7 +272,7 @@ export default function CreatePage() {
                       value={opt.value}
                       checked={selected}
                       onChange={() => setTone(opt.value)}
-                      className="mt-1"
+                      className="mt-1 accent-[var(--accent)]"
                     />
                     <span>
                       <span className="block text-[15px] font-medium text-ink">{opt.label}</span>
@@ -292,13 +307,13 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="block">
-      <span className="flex items-baseline justify-between gap-3">
-        <span className="text-sm font-medium text-ink">{label}</span>
-        {counter ? <span className="text-xs text-mute">{counter}</span> : null}
-      </span>
-      {hint ? <span className="mt-1 block text-sm text-mute">{hint}</span> : null}
+    <div className="write-field">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-sm font-medium text-ink">{label}</p>
+        {counter ? <p className="text-xs text-mute">{counter}</p> : null}
+      </div>
+      {hint ? <p className="mt-1 text-sm text-mute">{hint}</p> : null}
       {children}
-    </label>
+    </div>
   );
 }
