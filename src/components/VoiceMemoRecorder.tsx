@@ -36,7 +36,8 @@ function micErrorMessage(err: unknown): string {
 }
 
 export function VoiceMemoRecorder({ value, onChange }: VoiceMemoRecorderProps) {
-  const [supported] = useState(() => isMediaRecorderSupported());
+  const [mounted, setMounted] = useState(false);
+  const [supported, setSupported] = useState(false);
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +49,11 @@ export function VoiceMemoRecorder({ value, onChange }: VoiceMemoRecorderProps) {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const timerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    setSupported(isMediaRecorderSupported());
+  }, []);
 
   function setPreviewFromBlob(blob: Blob | null) {
     if (previewUrl.current) {
@@ -218,7 +224,11 @@ export function VoiceMemoRecorder({ value, onChange }: VoiceMemoRecorderProps) {
             녹음 중지
           </PrimaryButton>
         ) : (
-          <PrimaryButton type="button" onClick={start} disabled={!supported}>
+          <PrimaryButton
+            type="button"
+            onClick={start}
+            disabled={!mounted || !supported}
+          >
             {value ? "다시 녹음" : "녹음 시작"}
           </PrimaryButton>
         )}
@@ -247,7 +257,7 @@ export function VoiceMemoRecorder({ value, onChange }: VoiceMemoRecorderProps) {
         </p>
       </div>
 
-      {!supported ? (
+      {mounted && !supported ? (
         <p className="mt-2 text-xs text-mute">
           이 브라우저는 마이크 녹음을 지원하지 않아요. Chrome + 파일 첨부를 권장합니다.
         </p>
