@@ -55,6 +55,17 @@ export interface Capsule {
   promiseAccepted: boolean;
   promiseCompleted?: boolean;
   actionOutcome?: ActionOutcome | null;
+  /** 내가 직접 읽은 편지 내용 */
+  selfReading?: {
+    path: FuturePath;
+    transcript: string;
+    savedAt: string;
+  } | null;
+  /** 내가 직접 남긴 말을 읽어 저장한 내용 */
+  selfLetterReading?: {
+    transcript: string;
+    savedAt: string;
+  } | null;
   updatedAt: string;
 }
 

@@ -59,7 +59,15 @@ export function saveCapsule(capsule: Capsule): void {
 export function updateCapsule(
   id: string,
   patch: Partial<
-    Pick<Capsule, "promiseAccepted" | "promiseCompleted" | "result" | "actionOutcome">
+    Pick<
+      Capsule,
+      | "promiseAccepted"
+      | "promiseCompleted"
+      | "result"
+      | "actionOutcome"
+      | "selfReading"
+      | "selfLetterReading"
+    >
   >,
 ): Capsule | null {
   const capsules = [...readCapsules()];

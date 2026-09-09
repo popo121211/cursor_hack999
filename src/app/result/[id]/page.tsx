@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { PrimaryButton, SecondaryButton } from "@/components/Buttons";
 import { PushToast } from "@/components/PushToast";
 import { VoicePlayer } from "@/components/VoicePlayer";
+import { SelfReadAloud } from "@/components/SelfReadAloud";
 import { ensureDualResult } from "@/lib/fallback";
 import { useCapsule, useHasMounted } from "@/lib/hooks";
 import { updateCapsule } from "@/lib/storage";
@@ -260,23 +261,58 @@ export default function ResultPage() {
           <p className="letter-body mt-5 text-[16px] leading-[1.9] text-ink/90">
             {active.message}
           </p>
-          <VoicePlayer
-            key={`voice-${path}-${capsule.updatedAt}`}
-            headline={active.headline}
-            message={active.message}
-            action={active.action}
-            tone={input.tone}
-            listenLabel={isMissed ? "미룬 나 목소리로 듣기" : "지킨 나 목소리로 듣기"}
+          <SelfReadAloud
+            key={`read-${path}-${capsule.updatedAt}`}
+            title="내가 직접 읽어보기"
+            script={`${active.headline}\n\n${active.message}`}
+            savedTranscript={
+              capsule.selfReading?.path === path ? capsule.selfReading.transcript : null
+            }
+            onSave={(transcript) => {
+              updateCapsule(capsule.id, {
+                selfReading: {
+                  path,
+                  transcript,
+                  savedAt: new Date().toISOString(),
+                },
+              });
+            }}
           />
+          <div className="mt-4">
+            <VoicePlayer
+              key={`voice-${path}-${capsule.updatedAt}`}
+              headline={active.headline}
+              message={active.message}
+              action={active.action}
+              tone={input.tone}
+              listenLabel={isMissed ? "기계 음성으로 듣기" : "기계 음성으로 듣기"}
+            />
+          </div>
         </article>
 
         <section className="mt-6 letter-sheet">
           <p className="text-sm text-mute">FROM. 지금의 나</p>
           <h3 className="mt-2 font-display text-[1.35rem]">미래에 직접 남긴 말</h3>
           {input.letterToFuture?.trim() ? (
-            <p className="letter-body mt-3 text-[16px] leading-[1.9] text-ink">
-              {input.letterToFuture}
-            </p>
+            <>
+              <p className="letter-body mt-3 text-[16px] leading-[1.9] text-ink">
+                {input.letterToFuture}
+              </p>
+              <SelfReadAloud
+                key={`self-letter-${capsule.id}`}
+                title="내 말도 직접 읽어보기"
+                script={input.letterToFuture}
+                savedTranscript={capsule.selfLetterReading?.transcript ?? null}
+                onSave={(transcript) => {
+                  updateCapsule(capsule.id, {
+                    selfLetterReading: {
+                      transcript,
+                      savedAt: new Date().toISOString(),
+                    },
+                  });
+                }}
+              />
+            </>
           ) : (
             <p className="mt-3 text-sm text-mute">직접 남긴 메시지가 없습니다.</p>
           )}

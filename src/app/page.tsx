@@ -28,7 +28,7 @@ export default function HomePage() {
         </p>
 
         <p className="animate-fade-up mt-4 max-w-sm text-[15px] leading-relaxed text-mute">
-          지금의 말을 남기고, 지킨 나와 미룬 나의 목소리를 받아보세요.
+          직접 읽고, 읽은 문장을 남기며, 오늘의 선택으로 미래가 갈라집니다.
         </p>
 
         <div className="animate-soft-in mt-10 letter-sheet">
