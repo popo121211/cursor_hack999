@@ -98,7 +98,7 @@ export default function ResultPage() {
           메시지가 도착했습니다.
         </h1>
         <p className="animate-fade-up mt-3 text-[15px] leading-relaxed text-mute">
-          오늘의 선택이, 미래의 나를 가릅니다.
+          오늘의 네가 없으면, 그 미래도 없습니다.
         </p>
 
         <div className="animate-fade-up mt-8 grid grid-cols-2 gap-2 rounded-full border border-line bg-white p-1">

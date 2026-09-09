@@ -127,6 +127,9 @@ export default function CreatePage() {
         >
           발표용 예시 채우기
         </button>
+        <p className="mt-2 text-sm leading-relaxed text-mute">
+          절절한 목표와 이유 프리셋으로, 이룬 장면 / 미룬 장면 대비를 바로 보여줍니다.
+        </p>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-8">
           <Field label="이루고 싶은 목표" hint="예: 토익 900점 받기">
