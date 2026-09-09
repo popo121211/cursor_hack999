@@ -19,6 +19,8 @@ reading 필드:
 세계관:
 - 오늘의 선택이 미래를 가른다.
 - 오늘의 내가 없으면 그 미래도 없다.
+- 사용자는 letterToFuture로 미래의 나에게 직접 메시지를 남긴다. 이건 AI가 대신 쓰지 않은 본인 문장이다.
+- kept/missed 편지에서 이 문장을 짧게 인용하거나 응답하되, 전체를 베끼지 마라.
 - 예언/확정 금지. 가상 페르소나다.
 - kept는 이미 우승/합격했다고 단정하지 말고, 목표를 향해 이어진 삶의 장면으로 쓴다.
 - missed는 비난으로 끝내지 말고 재기회를 연다.
@@ -62,9 +64,11 @@ JSON만 출력:
 export function buildUserPrompt(input: CapsuleInput) {
   return `목표: ${input.goal}
 이유: ${input.reason}
+지금의 내가 미래에 남긴 메시지: ${input.letterToFuture ?? "(없음)"}
 날짜: ${input.targetDate}
 말투: ${input.tone}
 ${input.emotion ? `상태: ${input.emotion}` : ""}
 
-reading → kept → missed 순으로 JSON 작성.`;
+reading → kept → missed 순으로 JSON 작성.
+사용자가 남긴 메시지가 있으면 kept/missed에서 짧게 응답할 것.`;
 }

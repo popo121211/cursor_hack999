@@ -48,6 +48,7 @@ export function buildRebranchUserPrompt(args: {
 }) {
   return `목표: ${args.input.goal}
 이유: ${args.input.reason}
+지금의 내가 남긴 메시지: ${args.input.letterToFuture ?? ""}
 말투: ${args.input.tone}
 오늘 행동 결과: ${args.outcome === "done" ? "해냄(done)" : "못 함/미룸(skipped)"}
 이전 행동 제안: ${args.previous.action}
@@ -153,6 +154,7 @@ export function emptyPrevious(): CapsuleAIResult {
   return buildFallbackResult({
     goal: "목표를 이어가기",
     reason: "중간에 놓치지 않기 위해서",
+    letterToFuture: "나중에 읽는 나에게. 오늘을 비우지 말아 줘.",
     targetDate: new Date().toISOString().slice(0, 10),
     tone: "realistic",
     createdAt: new Date().toISOString(),

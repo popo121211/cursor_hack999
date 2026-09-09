@@ -20,18 +20,23 @@ function validateInput(body: unknown): CapsuleInput | null {
   if (!body || typeof body !== "object") return null;
   const b = body as Record<string, unknown>;
   if (typeof b.goal !== "string" || typeof b.reason !== "string") return null;
+  if (typeof b.letterToFuture !== "string") return null;
   if (typeof b.targetDate !== "string" || !isTone(b.tone)) return null;
 
   const goal = b.goal.trim();
   const reason = b.reason.trim();
+  const letterToFuture = b.letterToFuture.trim();
   if (goal.length < 5 || goal.length > 80) return null;
   if (reason.length < 10 || reason.length > 200) return null;
+  if (letterToFuture.length < 10 || letterToFuture.length > 300) return null;
 
   return {
     goal,
     reason,
+    letterToFuture,
     targetDate: b.targetDate,
     tone: b.tone,
+    reasonFromVoice: b.reasonFromVoice === true,
     createdAt: typeof b.createdAt === "string" ? b.createdAt : new Date().toISOString(),
   };
 }

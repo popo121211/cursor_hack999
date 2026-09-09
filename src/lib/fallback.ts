@@ -19,21 +19,24 @@ function buildReading(input: CapsuleInput): FutureReading {
   };
 }
 
-function toneKept(tone: Tone, reason: string, goal: string) {
+function toneKept(tone: Tone, reason: string, goal: string, letter?: string) {
   const quote = reason.length > 42 ? `${reason.slice(0, 42)}…` : reason;
+  const note = letter?.trim()
+    ? `네가 그때 남긴 말도 기억해. "${letter.trim().slice(0, 48)}${letter.trim().length > 48 ? "…" : ""}"`
+    : null;
   switch (tone) {
     case "gentle":
       return {
         headline: "그 문장을 안 놓친 아침",
         opening: `모니터 불빛 아래, "${goal}" 관련 파일을 다시 연 상태야.`,
-        middle: `메모에 남은 건 이거야. "${quote}"`,
+        middle: [note, `메모에 남은 건 이거야. "${quote}"`].filter(Boolean).join("\n\n"),
         close: "오늘의 네가 빠지면 이 장면도 없어. 거창할 필요 없고, 오늘 할 수 있는 것만.",
       };
     case "spicy":
       return {
         headline: "도망 안 친 날의 결과",
         opening: `"${goal}" 쪽으로 하루를 붙든 나야. 연설은 없고, 기록만 있어.`,
-        middle: `네가 남긴 이유: "${quote}"`,
+        middle: [note, `네가 남긴 이유: "${quote}"`].filter(Boolean).join("\n\n"),
         close: "오늘 너 없으면 이 미래도 없다. 변명 저장하지 말고, 지금 할 일 하나만.",
       };
     case "realistic":
@@ -41,7 +44,7 @@ function toneKept(tone: Tone, reason: string, goal: string) {
       return {
         headline: "연결이 남은 쪽의 나",
         opening: `"${goal}"을(를) 완전히 끝낸 상태는 아니야. 다만 끊기지 않은 쪽이지.`,
-        middle: `중심에 남은 문장: "${quote}"`,
+        middle: [note, `중심에 남은 문장: "${quote}"`].filter(Boolean).join("\n\n"),
         close: "오늘의 선택이 이 장면을 만든다. 감정은 나중에 두고, 작은 행동부터.",
       };
   }
@@ -130,7 +133,7 @@ function toMessage(
 export function buildFallbackResult(input: CapsuleInput): CapsuleAIResult {
   const reading = buildReading(input);
   const kept = toMessage(
-    toneKept(input.tone, input.reason, input.goal),
+    toneKept(input.tone, input.reason, input.goal, input.letterToFuture),
     defaultAction(input.goal, false),
     `${shortGoal(input.goal)} — 오늘의 연결이 미래야.`,
   );

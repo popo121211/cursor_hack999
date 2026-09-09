@@ -271,6 +271,18 @@ export default function ResultPage() {
         </article>
 
         <section className="mt-10 border-t border-line pt-6">
+          <p className="text-sm text-mute">FROM. 지금의 나</p>
+          <h3 className="mt-2 text-lg font-medium">미래에 직접 남긴 말</h3>
+          {input.letterToFuture?.trim() ? (
+            <p className="letter-body mt-3 text-[16px] leading-[1.85] text-ink">
+              {input.letterToFuture}
+            </p>
+          ) : (
+            <p className="mt-3 text-sm text-mute">직접 남긴 메시지가 없습니다.</p>
+          )}
+        </section>
+
+        <section className="mt-10 border-t border-line pt-6">
           <p className="text-sm text-mute">처음에 적어둔 이유</p>
           <p className="mt-2 text-[15px] leading-relaxed text-ink">“{input.reason}”</p>
         </section>

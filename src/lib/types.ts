@@ -16,6 +16,8 @@ export type ActionOutcome = "done" | "skipped";
 export interface CapsuleInput {
   goal: string;
   reason: string;
+  /** 지금의 내가 미래의 나에게 직접 남기는 메시지 */
+  letterToFuture?: string;
   targetDate: string;
   tone: Tone;
   emotion?: Emotion;

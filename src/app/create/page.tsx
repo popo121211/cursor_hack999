@@ -21,6 +21,7 @@ export default function CreatePage() {
 
   const [goal, setGoal] = useState("");
   const [reason, setReason] = useState("");
+  const [letterToFuture, setLetterToFuture] = useState("");
   const [targetDate, setTargetDate] = useState("");
   const [tone, setTone] = useState<Tone>("realistic");
   const [reasonFromVoice, setReasonFromVoice] = useState(false);
@@ -31,6 +32,7 @@ export default function CreatePage() {
     const demo = getDemoInput();
     setGoal(demo.goal);
     setReason(demo.reason);
+    setLetterToFuture(demo.letterToFuture ?? "");
     setTargetDate(demo.targetDate);
     setTone(demo.tone);
     setReasonFromVoice(false);
@@ -43,6 +45,7 @@ export default function CreatePage() {
 
     const trimmedGoal = goal.trim();
     const trimmedReason = reason.trim();
+    const trimmedLetter = letterToFuture.trim();
 
     if (trimmedGoal.length < 5 || trimmedGoal.length > 80) {
       setError("목표는 5~80자로 적어주세요.");
@@ -50,6 +53,10 @@ export default function CreatePage() {
     }
     if (trimmedReason.length < 10 || trimmedReason.length > 200) {
       setError("이유는 10~200자로 적어주세요.");
+      return;
+    }
+    if (trimmedLetter.length < 10 || trimmedLetter.length > 300) {
+      setError("미래의 나에게 남길 메시지는 10~300자로 적어주세요.");
       return;
     }
     if (!targetDate || targetDate < minDate) {
@@ -60,6 +67,7 @@ export default function CreatePage() {
     const input: CapsuleInput = {
       goal: trimmedGoal,
       reason: trimmedReason,
+      letterToFuture: trimmedLetter,
       targetDate,
       tone,
       reasonFromVoice,
@@ -109,6 +117,7 @@ export default function CreatePage() {
 
   const goalLen = goal.trim().length;
   const reasonLen = reason.trim().length;
+  const letterLen = letterToFuture.trim().length;
 
   return (
     <div className="flex min-h-full flex-col">
@@ -123,8 +132,8 @@ export default function CreatePage() {
           남겨주세요
         </h1>
         <p className="mt-3 text-[15px] text-mute">
-          텍스트로 적거나, 말로 이유를 남길 수 있어요. 입력이 해석된 뒤 지킨 나 / 미룬 나
-          편지로 돌아옵니다.
+          미래의 나에게 직접 전할 말도 함께 남기세요. 그다음 AI가 지킨 나 / 미룬 나
+          편지를 만듭니다.
         </p>
 
         <button
@@ -180,6 +189,21 @@ export default function CreatePage() {
             {reasonFromVoice ? (
               <p className="mt-1 text-xs text-mute">음성으로 남긴 이유입니다.</p>
             ) : null}
+          </Field>
+
+          <Field
+            label="미래의 나에게 직접 전할 말"
+            hint="AI가 대신 쓰지 않는, 지금의 내 문장"
+            counter={`${letterLen}/300 · 최소 10자`}
+          >
+            <textarea
+              value={letterToFuture}
+              onChange={(e) => setLetterToFuture(e.target.value)}
+              className="field-input min-h-[140px] resize-none"
+              placeholder="나중에 읽는 나에게. 오늘은…"
+              maxLength={300}
+              required
+            />
           </Field>
 
           <Field label="목표 날짜" hint="오늘 포함, 이후 날짜">
