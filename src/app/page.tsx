@@ -15,26 +15,19 @@ export default function HomePage() {
       <SiteHeader />
 
       <main className="relative flex flex-1 flex-col">
-        <section className="hero-stage page-shell pb-10 pt-4">
+        <section className="hero-stage page-shell pb-12 pt-6">
           <div className="hero-plane" aria-hidden />
-          <div className="hero-mark animate-seal-in delay-2" aria-hidden>
-            ME
-          </div>
 
           <div className="relative z-[1]">
-            <p className="animate-fade-up section-label">Time capsule</p>
-            <h1 className="animate-fade-up delay-1 font-display mt-5 text-[3.6rem] leading-[0.98] text-ink sm:text-[4.4rem]">
+            <h1 className="animate-fade-up font-display text-[3.6rem] leading-[0.98] text-ink sm:text-[4.4rem]">
               FROM.ME
             </h1>
-            <p className="animate-fade-up delay-2 mt-8 max-w-[17.5rem] text-[1.4rem] leading-snug text-ink-soft">
+            <p className="animate-fade-up delay-1 mt-8 max-w-[17.5rem] text-[1.4rem] leading-snug text-ink-soft">
               오늘의 선택이
               <br />
               미래의 나를 가른다.
             </p>
-            <p className="animate-fade-up delay-3 mt-5 max-w-sm text-[15px] leading-relaxed text-mute">
-              지금의 목소리를 남겨 두면, 타임캡슐을 열 때 다시 듣게 됩니다.
-            </p>
-            <div className="animate-fade-up delay-4 mt-10">
+            <div className="animate-fade-up delay-2 mt-10">
               <Link href="/create" className="btn-primary">
                 시작하기
               </Link>
@@ -42,11 +35,14 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="page-shell pb-24 pt-4">
+        <section className="page-shell pb-24 pt-2">
           <p className="section-label">Two futures</p>
           <h2 className="font-display mt-3 text-[1.7rem] leading-snug text-ink">
             같은 오늘에서 갈라지는 두 나
           </h2>
+          <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-mute">
+            글과 목소리로 지금의 나를 남겨 두면, 타임캡슐을 열 때 다시 듣게 됩니다.
+          </p>
           <div className="mt-6">
             <div className="path-tabs">
               <button

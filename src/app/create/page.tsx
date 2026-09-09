@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PrimaryButton } from "@/components/Buttons";
@@ -13,13 +13,16 @@ import { saveCapsule } from "@/lib/storage";
 import { saveVoiceMemo } from "@/lib/voiceStore";
 import { Capsule, CapsuleAIResult, CapsuleInput, TONE_OPTIONS, Tone } from "@/lib/types";
 
-function todayISODate() {
-  return new Date().toISOString().slice(0, 10);
+function localISODate(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 export default function CreatePage() {
   const router = useRouter();
-  const minDate = useMemo(() => todayISODate(), []);
+  const [minDate, setMinDate] = useState(() => localISODate());
 
   const [goal, setGoal] = useState("");
   const [reason, setReason] = useState("");
@@ -31,6 +34,10 @@ export default function CreatePage() {
   const [recorderKey, setRecorderKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setMinDate(localISODate());
+  }, []);
 
   function fillDemo() {
     const demo = getDemoInput();
@@ -52,6 +59,7 @@ export default function CreatePage() {
     const trimmedGoal = goal.trim();
     const trimmedReason = reason.trim();
     const trimmedLetter = letterToFuture.trim();
+    const today = localISODate();
 
     if (trimmedGoal.length < 5 || trimmedGoal.length > 80) {
       setError("목표는 5~80자로 적어주세요.");
@@ -65,7 +73,7 @@ export default function CreatePage() {
       setError("미래의 나에게 남길 메시지는 10~300자로 적어주세요.");
       return;
     }
-    if (!targetDate || targetDate < minDate) {
+    if (!targetDate || targetDate < today) {
       setError("목표 날짜는 오늘 포함 이후로 선택해주세요.");
       return;
     }
@@ -105,18 +113,28 @@ export default function CreatePage() {
         await new Promise((r) => setTimeout(r, 2800 - elapsed));
       }
 
+      const capsuleId = crypto.randomUUID();
+      let hasVoiceMemo = false;
+      if (voiceMemo && voiceMemo.size > 0) {
+        try {
+          await saveVoiceMemo(capsuleId, voiceMemo);
+          hasVoiceMemo = true;
+        } catch {
+          // 편지는 저장하고, 음성만 실패했을 때 계속 진행
+        }
+      }
+
       const capsule: Capsule = {
-        id: crypto.randomUUID(),
+        id: capsuleId,
         input,
         result: ensureDualResult(data.result, input),
         promiseAccepted: false,
-        hasVoiceMemo: !!voiceMemo,
+        hasVoiceMemo,
         updatedAt: new Date().toISOString(),
       };
-      if (voiceMemo) {
-        await saveVoiceMemo(capsule.id, voiceMemo);
+      if (!saveCapsule(capsule)) {
+        throw new Error("이 브라우저에 저장할 수 없어요. 시크릿 모드를 끄고 다시 시도해주세요.");
       }
-      saveCapsule(capsule);
       setLoading(false);
       router.push(`/result/${capsule.id}`);
     } catch (err) {
@@ -289,13 +307,13 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="block">
-      <span className="flex items-baseline justify-between gap-3">
-        <span className="text-sm font-medium text-ink">{label}</span>
-        {counter ? <span className="text-xs text-mute">{counter}</span> : null}
-      </span>
-      {hint ? <span className="mt-1 block text-sm text-mute">{hint}</span> : null}
+    <div className="write-field">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-sm font-medium text-ink">{label}</p>
+        {counter ? <p className="text-xs text-mute">{counter}</p> : null}
+      </div>
+      {hint ? <p className="mt-1 text-sm text-mute">{hint}</p> : null}
       {children}
-    </label>
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { Capsule, MAX_STORED_CAPSULES, STORAGE_KEY } from "./types";
+import { deleteVoiceMemo } from "./voiceStore";
 
 const CHANGE_EVENT = "fromme-storage";
 
@@ -45,15 +46,28 @@ export function getCapsuleById(id: string): Capsule | null {
   return readCapsules().find((c) => c.id === id) ?? null;
 }
 
-export function saveCapsule(capsule: Capsule): void {
-  if (!canUseStorage()) return;
-  const others = readCapsules().filter((c) => c.id !== capsule.id);
-  const next = [capsule, ...others].slice(0, MAX_STORED_CAPSULES);
-  const raw = JSON.stringify(next);
-  window.localStorage.setItem(STORAGE_KEY, raw);
-  cacheRaw = raw;
-  cacheParsed = next;
-  emitChange();
+/** @returns true if persisted */
+export function saveCapsule(capsule: Capsule): boolean {
+  if (!canUseStorage()) return false;
+  try {
+    const previous = readCapsules();
+    const others = previous.filter((c) => c.id !== capsule.id);
+    const next = [capsule, ...others].slice(0, MAX_STORED_CAPSULES);
+    const dropped = previous.filter((c) => !next.some((n) => n.id === c.id));
+    const raw = JSON.stringify(next);
+    window.localStorage.setItem(STORAGE_KEY, raw);
+    cacheRaw = raw;
+    cacheParsed = next;
+    emitChange();
+    for (const old of dropped) {
+      if (old.hasVoiceMemo) {
+        void deleteVoiceMemo(old.id).catch(() => undefined);
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function updateCapsule(
@@ -69,22 +83,27 @@ export function updateCapsule(
     >
   >,
 ): Capsule | null {
-  const capsules = [...readCapsules()];
-  const index = capsules.findIndex((c) => c.id === id);
-  if (index < 0) return null;
+  if (!canUseStorage()) return null;
+  try {
+    const capsules = [...readCapsules()];
+    const index = capsules.findIndex((c) => c.id === id);
+    if (index < 0) return null;
 
-  const updated: Capsule = {
-    ...capsules[index],
-    ...patch,
-    updatedAt: new Date().toISOString(),
-  };
-  capsules[index] = updated;
-  const raw = JSON.stringify(capsules);
-  window.localStorage.setItem(STORAGE_KEY, raw);
-  cacheRaw = raw;
-  cacheParsed = capsules;
-  emitChange();
-  return updated;
+    const updated: Capsule = {
+      ...capsules[index],
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    };
+    capsules[index] = updated;
+    const raw = JSON.stringify(capsules);
+    window.localStorage.setItem(STORAGE_KEY, raw);
+    cacheRaw = raw;
+    cacheParsed = capsules;
+    emitChange();
+    return updated;
+  } catch {
+    return null;
+  }
 }
 
 export function subscribeCapsules(onStoreChange: () => void) {

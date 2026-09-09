@@ -9,11 +9,17 @@ interface ReasonVoiceInputProps {
 }
 
 export function ReasonVoiceInput({ value, onChange }: ReasonVoiceInputProps) {
-  const [supported] = useState(() => isSttSupported());
+  const [mounted, setMounted] = useState(false);
+  const [supported, setSupported] = useState(false);
   const [listening, setListening] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
   const stopRef = useRef<(() => void) | null>(null);
   const baseRef = useRef(value);
+
+  useEffect(() => {
+    setMounted(true);
+    setSupported(isSttSupported());
+  }, []);
 
   useEffect(() => {
     return () => stopRef.current?.();
@@ -62,6 +68,10 @@ export function ReasonVoiceInput({ value, onChange }: ReasonVoiceInputProps) {
         );
       },
     });
+  }
+
+  if (!mounted) {
+    return <div className="mt-2 h-5" aria-hidden />;
   }
 
   if (!supported) {

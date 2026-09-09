@@ -173,5 +173,9 @@ export function ensureDualResult(
     notificationMessage: result.notificationMessage || fallback.notificationMessage,
     reading,
     missed,
+    branchShift:
+      ("branchShift" in result && typeof result.branchShift === "string"
+        ? result.branchShift
+        : undefined) || fallback.branchShift,
   };
 }

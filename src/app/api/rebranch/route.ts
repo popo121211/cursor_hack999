@@ -83,6 +83,12 @@ function normalize(
 }
 
 export async function POST(req: Request) {
+  let parsedBody: {
+    input: CapsuleInput;
+    previous: CapsuleAIResult;
+    outcome: ActionOutcome;
+  } | null = null;
+
   try {
     const body = (await req.json()) as {
       input?: CapsuleInput;
@@ -100,6 +106,7 @@ export async function POST(req: Request) {
     const input = body.input;
     const previous = ensureDualResult(body.previous, input);
     const outcome = body.outcome;
+    parsedBody = { input, previous, outcome };
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -150,6 +157,13 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("[rebranch]", error);
+    if (parsedBody) {
+      return NextResponse.json({
+        result: buildRebranchFallback(parsedBody),
+        fallback: true,
+        reason: "server_error",
+      });
+    }
     return NextResponse.json({ error: "서버 오류가 발생했습니다." }, { status: 500 });
   }
 }

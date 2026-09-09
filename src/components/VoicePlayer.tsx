@@ -25,9 +25,15 @@ export function VoicePlayer({
   tone,
   listenLabel = "미래의 나 목소리로 듣기",
 }: VoicePlayerProps) {
-  const [supported] = useState(() => isSpeechSupported());
+  const [mounted, setMounted] = useState(false);
+  const [supported, setSupported] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const stopRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    setSupported(isSpeechSupported());
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -54,6 +60,10 @@ export function VoicePlayer({
       onEnd: () => setSpeaking(false),
       onError: () => setSpeaking(false),
     });
+  }
+
+  if (!mounted) {
+    return <div className="mt-6 h-12" aria-hidden />;
   }
 
   if (!supported) {

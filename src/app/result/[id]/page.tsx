@@ -24,6 +24,7 @@ export default function ResultPage() {
   const mounted = useHasMounted();
   const capsule = useCapsule(params.id);
   const [path, setPath] = useState<FuturePath>("kept");
+  const [pathReady, setPathReady] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [promiseFlash, setPromiseFlash] = useState(false);
@@ -31,7 +32,7 @@ export default function ResultPage() {
   const [rebranchError, setRebranchError] = useState<string | null>(null);
   const [voicePlayToken, setVoicePlayToken] = useState(0);
   const letterRef = useRef<HTMLElement>(null);
-  const notifyRef = useRef<HTMLElement>(null);
+  const memoRef = useRef<HTMLElement>(null);
   const branchRef = useRef<HTMLElement>(null);
   const timerRef = useRef<number | null>(null);
   const tickRef = useRef<number | null>(null);
@@ -42,6 +43,13 @@ export default function ResultPage() {
       if (tickRef.current) window.clearInterval(tickRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!capsule || pathReady) return;
+    if (capsule.actionOutcome === "skipped") setPath("missed");
+    else if (capsule.actionOutcome === "done") setPath("kept");
+    setPathReady(true);
+  }, [capsule, pathReady]);
 
   const dual = useMemo(() => {
     if (!capsule) return null;
@@ -135,7 +143,8 @@ export default function ResultPage() {
 
   function openFromToast() {
     setToastVisible(false);
-    letterRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const target = capsule?.hasVoiceMemo ? memoRef.current : letterRef.current;
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
     if (capsule?.hasVoiceMemo) {
       setVoicePlayToken((n) => n + 1);
     }
@@ -252,7 +261,7 @@ export default function ResultPage() {
           key={`${path}-${capsule.updatedAt}`}
           className="animate-soft-in mt-5 letter-sheet letter-sheet-lg"
         >
-          <p className="text-sm text-mute">{isMissed ? "미룬 쪽의 나" : "이은 쪽의 나"}</p>
+          <p className="text-sm text-mute">{isMissed ? "미룬 쪽의 나" : "지킨 쪽의 나"}</p>
           {isMissed ? (
             <p className="mt-2 text-sm leading-relaxed text-mute">
               실패로 끝난 버전이 아닙니다. 다시 이을 여지는 남아 있습니다.
@@ -276,7 +285,7 @@ export default function ResultPage() {
           </div>
         </article>
 
-        <section className="section-rule mt-8">
+        <section ref={memoRef} className="section-rule mt-8">
           <p className="text-sm text-mute">FROM. 지금의 나</p>
           <h3 className="mt-2 font-display text-[1.45rem]">미래에 직접 남긴 말</h3>
           {input.letterToFuture?.trim() ? (
@@ -363,8 +372,9 @@ export default function ResultPage() {
         </section>
 
         <section
-          ref={notifyRef}
-          className={`section-rule mt-8 transition ${promiseFlash ? "opacity-100" : ""}`}
+          className={`section-rule mt-8 transition ${
+            promiseFlash ? "bg-white/40 px-3 py-4 -mx-3" : ""
+          }`}
         >
           <h3 className="font-display text-[1.45rem]">알림 도착 체험</h3>
           <p className="mt-3 text-sm leading-relaxed text-mute">
