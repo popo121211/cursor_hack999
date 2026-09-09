@@ -7,7 +7,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { PrimaryButton, SecondaryButton } from "@/components/Buttons";
 import { PushToast } from "@/components/PushToast";
 import { VoicePlayer } from "@/components/VoicePlayer";
-import { SelfReadAloud } from "@/components/SelfReadAloud";
+import { VoiceMemoPlayer } from "@/components/VoiceMemoPlayer";
 import { ensureDualResult } from "@/lib/fallback";
 import { useCapsule, useHasMounted } from "@/lib/hooks";
 import { updateCapsule } from "@/lib/storage";
@@ -29,6 +29,7 @@ export default function ResultPage() {
   const [promiseFlash, setPromiseFlash] = useState(false);
   const [rebranching, setRebranching] = useState(false);
   const [rebranchError, setRebranchError] = useState<string | null>(null);
+  const [voicePlayToken, setVoicePlayToken] = useState(0);
   const letterRef = useRef<HTMLElement>(null);
   const notifyRef = useRef<HTMLElement>(null);
   const branchRef = useRef<HTMLElement>(null);
@@ -135,6 +136,9 @@ export default function ResultPage() {
   function openFromToast() {
     setToastVisible(false);
     letterRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (capsule?.hasVoiceMemo) {
+      setVoicePlayToken((n) => n + 1);
+    }
   }
 
   function switchPath(next: FuturePath) {
@@ -261,23 +265,6 @@ export default function ResultPage() {
           <p className="letter-body mt-5 text-[16px] leading-[1.9] text-ink/90">
             {active.message}
           </p>
-          <SelfReadAloud
-            key={`read-${path}-${capsule.updatedAt}`}
-            title="내가 직접 읽어보기"
-            script={`${active.headline}\n\n${active.message}`}
-            savedTranscript={
-              capsule.selfReading?.path === path ? capsule.selfReading.transcript : null
-            }
-            onSave={(transcript) => {
-              updateCapsule(capsule.id, {
-                selfReading: {
-                  path,
-                  transcript,
-                  savedAt: new Date().toISOString(),
-                },
-              });
-            }}
-          />
           <div className="mt-4">
             <VoicePlayer
               key={`voice-${path}-${capsule.updatedAt}`}
@@ -285,7 +272,7 @@ export default function ResultPage() {
               message={active.message}
               action={active.action}
               tone={input.tone}
-              listenLabel={isMissed ? "기계 음성으로 듣기" : "기계 음성으로 듣기"}
+              listenLabel="기계 음성으로 듣기"
             />
           </div>
         </article>
@@ -294,27 +281,24 @@ export default function ResultPage() {
           <p className="text-sm text-mute">FROM. 지금의 나</p>
           <h3 className="mt-2 font-display text-[1.35rem]">미래에 직접 남긴 말</h3>
           {input.letterToFuture?.trim() ? (
-            <>
-              <p className="letter-body mt-3 text-[16px] leading-[1.9] text-ink">
-                {input.letterToFuture}
-              </p>
-              <SelfReadAloud
-                key={`self-letter-${capsule.id}`}
-                title="내 말도 직접 읽어보기"
-                script={input.letterToFuture}
-                savedTranscript={capsule.selfLetterReading?.transcript ?? null}
-                onSave={(transcript) => {
-                  updateCapsule(capsule.id, {
-                    selfLetterReading: {
-                      transcript,
-                      savedAt: new Date().toISOString(),
-                    },
-                  });
-                }}
-              />
-            </>
+            <p className="letter-body mt-3 text-[16px] leading-[1.9] text-ink">
+              {input.letterToFuture}
+            </p>
           ) : (
             <p className="mt-3 text-sm text-mute">직접 남긴 메시지가 없습니다.</p>
+          )}
+          {capsule.hasVoiceMemo ? (
+            <div className="mt-5 border-t border-line/70 pt-4">
+              <VoiceMemoPlayer
+                memoId={capsule.id}
+                label="지금의 내가 남긴 음성"
+                autoPlayToken={voicePlayToken}
+              />
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-mute">
+              이 타임캡슐에는 음성 메모가 없습니다. 새로 만들 때 녹음할 수 있어요.
+            </p>
           )}
         </section>
 
@@ -384,7 +368,8 @@ export default function ResultPage() {
         >
           <h3 className="font-display text-[1.35rem]">알림 도착 체험</h3>
           <p className="mt-2 text-sm leading-relaxed text-mute">
-            5초 뒤, 지금 보고 있는 {isMissed ? "미룬" : "지킨"} 나의 짧은 알림이 위에 뜹니다.
+            5초 뒤 알림이 도착합니다. 알림을 열면
+            {capsule.hasVoiceMemo ? " 남긴 음성도 함께 재생됩니다." : " 편지로 이동합니다."}
           </p>
           {scheduling ? (
             <p className="mt-4 text-center font-display text-5xl text-ink">{countdown}</p>

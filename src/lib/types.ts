@@ -55,17 +55,8 @@ export interface Capsule {
   promiseAccepted: boolean;
   promiseCompleted?: boolean;
   actionOutcome?: ActionOutcome | null;
-  /** 내가 직접 읽은 편지 내용 */
-  selfReading?: {
-    path: FuturePath;
-    transcript: string;
-    savedAt: string;
-  } | null;
-  /** 내가 직접 남긴 말을 읽어 저장한 내용 */
-  selfLetterReading?: {
-    transcript: string;
-    savedAt: string;
-  } | null;
+  /** 미래의 나에게 남긴 음성 메모가 IndexedDB에 있는지 */
+  hasVoiceMemo?: boolean;
   updatedAt: string;
 }
 

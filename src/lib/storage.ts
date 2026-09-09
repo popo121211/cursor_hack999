@@ -65,8 +65,7 @@ export function updateCapsule(
       | "promiseCompleted"
       | "result"
       | "actionOutcome"
-      | "selfReading"
-      | "selfLetterReading"
+      | "hasVoiceMemo"
     >
   >,
 ): Capsule | null {

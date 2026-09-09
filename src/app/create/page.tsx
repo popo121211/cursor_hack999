@@ -6,9 +6,11 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { PrimaryButton } from "@/components/Buttons";
 import { GeneratingOverlay } from "@/components/GeneratingOverlay";
 import { ReasonVoiceInput } from "@/components/ReasonVoiceInput";
+import { VoiceMemoRecorder } from "@/components/VoiceMemoRecorder";
 import { getDemoInput } from "@/lib/demo";
 import { ensureDualResult } from "@/lib/fallback";
 import { saveCapsule } from "@/lib/storage";
+import { saveVoiceMemo } from "@/lib/voiceStore";
 import { Capsule, CapsuleAIResult, CapsuleInput, TONE_OPTIONS, Tone } from "@/lib/types";
 
 function todayISODate() {
@@ -25,6 +27,8 @@ export default function CreatePage() {
   const [targetDate, setTargetDate] = useState("");
   const [tone, setTone] = useState<Tone>("realistic");
   const [reasonFromVoice, setReasonFromVoice] = useState(false);
+  const [voiceMemo, setVoiceMemo] = useState<Blob | null>(null);
+  const [recorderKey, setRecorderKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -36,6 +40,8 @@ export default function CreatePage() {
     setTargetDate(demo.targetDate);
     setTone(demo.tone);
     setReasonFromVoice(false);
+    setVoiceMemo(null);
+    setRecorderKey((k) => k + 1);
     setError(null);
   }
 
@@ -104,8 +110,12 @@ export default function CreatePage() {
         input,
         result: ensureDualResult(data.result, input),
         promiseAccepted: false,
+        hasVoiceMemo: !!voiceMemo,
         updatedAt: new Date().toISOString(),
       };
+      if (voiceMemo) {
+        await saveVoiceMemo(capsule.id, voiceMemo);
+      }
       saveCapsule(capsule);
       setLoading(false);
       router.push(`/result/${capsule.id}`);
@@ -132,8 +142,7 @@ export default function CreatePage() {
           남겨주세요
         </h1>
         <p className="animate-fade-up mt-3 text-[15px] leading-relaxed text-mute">
-          미래의 나에게 직접 전할 말도 함께 남기세요. 그다음 AI가 지킨 나 / 미룬 나
-          편지를 만듭니다.
+          글과 함께, 미래의 나에게 남길 내 목소리도 녹음할 수 있어요.
         </p>
 
         <button
@@ -203,6 +212,11 @@ export default function CreatePage() {
               placeholder="나중에 읽는 나에게. 오늘은…"
               maxLength={300}
               required
+            />
+            <VoiceMemoRecorder
+              key={recorderKey}
+              value={voiceMemo}
+              onChange={setVoiceMemo}
             />
           </Field>
 
