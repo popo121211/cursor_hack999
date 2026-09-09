@@ -142,7 +142,7 @@ export default function CreatePage() {
           남겨주세요
         </h1>
         <p className="animate-fade-up mt-3 text-[15px] leading-relaxed text-mute">
-          글과 함께, 미래의 나에게 남길 내 목소리도 녹음할 수 있어요.
+          글과 함께 내 목소리를 녹음해 두면, 나중에 타임캡슐에서 다시 들을 수 있어요.
         </p>
 
         <button
@@ -213,6 +213,12 @@ export default function CreatePage() {
               maxLength={300}
               required
             />
+          </Field>
+
+          <Field
+            label="음성 메모 (선택)"
+            hint="지금 녹음한 목소리를 나중에 타임캡슐에서 재생합니다"
+          >
             <VoiceMemoRecorder
               key={recorderKey}
               value={voiceMemo}

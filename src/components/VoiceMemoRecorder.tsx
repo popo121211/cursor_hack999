@@ -158,17 +158,17 @@ export function VoiceMemoRecorder({ value, onChange }: VoiceMemoRecorderProps) {
   return (
     <div className="mt-3">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-ink">미래의 나에게 음성으로 남기기</p>
+        <p className="text-sm text-ink">지금 녹음 · 나중에 재생</p>
         <p className="text-xs text-mute">
           {recording
             ? `${seconds}s / ${MAX_SECONDS}s`
             : value
-              ? "녹음됨"
+              ? "저장됨 · 결과에서 재생"
               : `최대 ${MAX_SECONDS}초`}
         </p>
       </div>
       <p className="mt-1 text-xs text-mute">
-        따라 읽기가 아닙니다. 지금의 목소리를 녹음해 나중에 재생합니다.
+        원하는 말을 자유롭게 녹음하세요. 타임캡슐을 열 때 다시 들을 수 있어요.
       </p>
 
       <div className="mt-3 grid grid-cols-2 gap-3">

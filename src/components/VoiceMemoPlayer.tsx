@@ -12,7 +12,7 @@ interface VoiceMemoPlayerProps {
 
 export function VoiceMemoPlayer({
   memoId,
-  label = "지금의 내가 남긴 음성",
+  label = "예전에 녹음해 둔 내 목소리",
   autoPlayToken = 0,
 }: VoiceMemoPlayerProps) {
   const [url, setUrl] = useState<string | null>(null);
@@ -70,7 +70,7 @@ export function VoiceMemoPlayer({
   return (
     <div className="mt-3">
       <p className="text-sm font-medium text-ink">{label}</p>
-      <p className="mt-1 text-xs text-mute">타임캡슐에 남겨둔 내 목소리입니다.</p>
+      <p className="mt-1 text-xs text-mute">만들 때 녹음해 둔 음성입니다. 지금 다시 들을 수 있어요.</p>
       <audio
         id={`voice-memo-${memoId}`}
         className="mt-3 w-full"

@@ -291,13 +291,13 @@ export default function ResultPage() {
             <div className="mt-5 border-t border-line/70 pt-4">
               <VoiceMemoPlayer
                 memoId={capsule.id}
-                label="지금의 내가 남긴 음성"
+                label="예전에 녹음해 둔 내 목소리"
                 autoPlayToken={voicePlayToken}
               />
             </div>
           ) : (
             <p className="mt-4 text-sm text-mute">
-              이 타임캡슐에는 음성 메모가 없습니다. 새로 만들 때 녹음할 수 있어요.
+              음성 메모가 없습니다. 만들 때 녹음하면 여기서 다시 들을 수 있어요.
             </p>
           )}
         </section>

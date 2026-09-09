@@ -28,7 +28,7 @@ export default function HomePage() {
         </p>
 
         <p className="animate-fade-up mt-4 max-w-sm text-[15px] leading-relaxed text-mute">
-          지금의 목소리를 녹음해 두고, 나중에 다시 듣게 합니다.
+          지금의 목소리를 녹음해 두면, 타임캡슐을 열 때 다시 들을 수 있습니다.
         </p>
 
         <div className="animate-soft-in mt-10 letter-sheet">
